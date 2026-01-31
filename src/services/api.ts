@@ -55,7 +55,7 @@ export const api = {
     code: string,
     visitorId?: string
   ): Promise<{ success: boolean; data?: any; message?: string }> => {
-    return fetchApi('/codes/validate', {
+    return fetchApi('/codes?action=validate', {
       method: 'POST',
       body: JSON.stringify({ code, visitorId }),
     });
@@ -145,7 +145,7 @@ export const api = {
     aiWordCount?: number;
     error?: string;
   }> => {
-    const result = await fetchApi('/ai/analyze', {
+    const result = await fetchApi('/ai?action=analyze', {
       method: 'POST',
       body: JSON.stringify({ assessmentId, userData }),
     });
@@ -209,7 +209,7 @@ export const adminApi = {
     if (params.page) query.set('page', params.page.toString());
     if (params.limit) query.set('limit', params.limit.toString());
 
-    return fetchApi(`/codes/list?${query}`, {
+    return fetchApi(`/codes?action=list&${query}`, {
       headers: adminApi.getAuthHeaders(),
     });
   },
@@ -223,7 +223,7 @@ export const adminApi = {
     prefix?: string;
     expiresInDays?: number;
   }): Promise<any> => {
-    return fetchApi('/codes/create', {
+    return fetchApi('/codes?action=create', {
       method: 'POST',
       headers: adminApi.getAuthHeaders(),
       body: JSON.stringify(params),
@@ -234,7 +234,7 @@ export const adminApi = {
    * Revoke a redemption code
    */
   revokeCode: async (code: string): Promise<any> => {
-    return fetchApi('/codes/revoke', {
+    return fetchApi('/codes?action=revoke', {
       method: 'POST',
       headers: adminApi.getAuthHeaders(),
       body: JSON.stringify({ code }),

@@ -5,7 +5,7 @@ import { Scores, ReportData } from "../types";
  * The API key is kept safe on the server side
  */
 export const generateReport = async (scores: Scores, openAnswers: string[]): Promise<ReportData> => {
-  const response = await fetch('/api/ai/report', {
+  const response = await fetch('/api/ai?action=report', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
