@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import prisma from './lib/db';
-import { withAuth, withOptionalAuth } from './lib/auth';
+import { withAuth } from './lib/auth';
 import { sanitizeCode } from './lib/sanitize';
 
 function generateCode(prefix: string = 'GROW'): string {
