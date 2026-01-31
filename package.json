@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:client\"",
     "dev:client": "vite",
     "dev:api": "node --import tsx server.js",
-    "build": "tsc -b && vite build",
+    "build": "prisma generate && prisma db push && tsc -b && vite build",
     "preview": "vite preview",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
