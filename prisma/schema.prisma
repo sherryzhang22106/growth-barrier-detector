@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RedemptionCode {
+  code        String       @id
+  packageType String       @default("STANDARD") @map("package_type")
+  status      String       @default("UNUSED")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  activatedAt DateTime?    @map("activated_at")
+  expiresAt   DateTime?    @map("expires_at")
+  userId      String?      @map("user_id")
+  assessments Assessment[]
+
+  @@map("redemption_codes")
+}
+
+model Assessment {
+  id             String          @id @default(uuid())
+  visitorId      String          @map("visitor_id")
+  code           String
+  redemptionCode RedemptionCode  @relation(fields: [code], references: [code])
+  responses      Json
+  scores         Json
+  aiAnalysis     String?         @db.Text @map("ai_analysis")
+  aiStatus       String          @default("pending") @map("ai_status")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  completedAt    DateTime?       @map("completed_at")
+
+  @@map("assessments")
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model Progress {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  responses Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("progress")
+}

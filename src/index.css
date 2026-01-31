@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for the report markdown content */
+.report-markdown {
+  @apply text-slate-700 leading-relaxed;
+}
+
+.report-markdown h1 {
+  @apply text-3xl font-black text-slate-900 mt-12 mb-6 pb-4 border-b border-slate-100;
+}
+
+.report-markdown h2 {
+  @apply text-2xl font-black text-slate-800 mt-10 mb-4;
+}
+
+.report-markdown h3 {
+  @apply text-xl font-bold text-slate-800 mt-8 mb-3;
+}
+
+.report-markdown p {
+  @apply mb-4 text-base leading-relaxed;
+}
+
+.report-markdown ul,
+.report-markdown ol {
+  @apply mb-4 pl-6;
+}
+
+.report-markdown li {
+  @apply mb-2;
+}
+
+.report-markdown blockquote {
+  @apply border-l-4 border-indigo-200 pl-4 py-2 my-4 bg-indigo-50/50 rounded-r-xl italic text-slate-600;
+}
+
+.report-markdown hr {
+  @apply my-8 border-slate-100;
+}
+
+/* Print styles */
+@media print {
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+  }
+
+  .report-markdown {
+    font-size: 11pt;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-in {
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.slide-in-from-bottom-10 {
+  animation-name: slideInFromBottom;
+}
+
+.slide-in-from-right-8 {
+  animation-name: slideInFromRight;
+}
+
+.slide-in-from-left-8 {
+  animation-name: slideInFromLeft;
+}
+
+.zoom-in {
+  animation-name: fadeIn;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
