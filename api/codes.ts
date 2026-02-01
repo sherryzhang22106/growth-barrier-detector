@@ -61,7 +61,7 @@ async function listCodes(req: VercelRequest, res: VercelResponse) {
 async function createCodes(req: VercelRequest, res: VercelResponse) {
   const { count = 1, packageType = 'STANDARD', prefix = 'GROW', expiresInDays } = req.body;
 
-  const codeCount = Math.min(100, Math.max(1, parseInt(count, 10)));
+  const codeCount = Math.min(100, Math.max(1, Number(count) || 1));
   const sanitizedPrefix = sanitizeCode(prefix).slice(0, 8) || 'GROW';
 
   const codes: string[] = [];
