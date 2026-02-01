@@ -1,5 +1,5 @@
-import * as jwt from 'jsonwebtoken';
-import * as bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'fallback-secret-change-in-production';
