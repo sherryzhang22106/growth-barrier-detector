@@ -63,8 +63,9 @@ const AdminCodes: React.FC = () => {
   const handleCreate = async () => {
     setCreating(true);
     try {
+      const count = Math.max(1, Math.min(100, Number(createForm.count) || 1));
       const result = await adminApi.createCodes({
-        count: createForm.count,
+        count,
         packageType: createForm.packageType,
         prefix: createForm.prefix,
         expiresInDays: createForm.expiresInDays ? parseInt(createForm.expiresInDays) : undefined,
@@ -281,7 +282,7 @@ const AdminCodes: React.FC = () => {
                   min="1"
                   max="100"
                   value={createForm.count}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, count: Math.max(1, Math.min(100, Number(e.target.value) || 1)) }))}
                   className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-indigo-500 outline-none"
                 />
               </div>
