@@ -2,7 +2,6 @@
   "name": "growth-barrier-detector",
   "version": "2.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:client\"",
     "dev:client": "vite",
