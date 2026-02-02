@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { adminApi } from '../../services/api';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Assessment {
   id: string;
@@ -228,16 +230,57 @@ const AdminAssessments: React.FC = () => {
 
       if (response.ok) {
         const html = await response.text();
-        // Download as HTML file
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `report-${id}.html`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+
+        // Create a hidden container to render HTML
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '800px';
+        container.innerHTML = html;
+        document.body.appendChild(container);
+
+        // Wait for content to render
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Generate PDF using html2canvas and jsPDF
+        const canvas = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+
+        // Calculate pages needed
+        const pageHeight = pdfHeight / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Add first page
+        pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pageHeight;
+
+        // Add additional pages if needed
+        while (heightLeft > 0) {
+          position -= pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
+          heightLeft -= pageHeight;
+        }
+
+        // Download PDF
+        pdf.save(`report-${id}.pdf`);
+
+        // Cleanup
+        document.body.removeChild(container);
       } else {
         alert('报告生成失败');
       }

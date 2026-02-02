@@ -4,6 +4,8 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarC
 import { ReportData } from '../types';
 import { parse } from 'marked';
 import DOMPurify from 'dompurify';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Props {
   data: ReportData;
@@ -104,30 +106,77 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
     alert('报告链接已复制，快去分享给朋友吧！');
   };
 
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
   const handleDownloadPDF = async () => {
     if (!assessmentId) {
       alert('报告尚未生成完成');
       return;
     }
+    setDownloadingPDF(true);
     try {
       const response = await fetch(`/api/assessments/pdf?id=${assessmentId}`);
       if (response.ok) {
         const html = await response.text();
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `成长阻碍报告-${assessmentId.slice(0, 8)}.html`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+
+        // Create a hidden container to render HTML
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '800px';
+        container.innerHTML = html;
+        document.body.appendChild(container);
+
+        // Wait for content to render
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Generate PDF using html2canvas and jsPDF
+        const canvas = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+
+        // Calculate pages needed
+        const pageHeight = pdfHeight / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Add first page
+        pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pageHeight;
+
+        // Add additional pages if needed
+        while (heightLeft > 0) {
+          position -= pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
+          heightLeft -= pageHeight;
+        }
+
+        // Download PDF
+        pdf.save(`成长阻碍报告-${assessmentId.slice(0, 8)}.pdf`);
+
+        // Cleanup
+        document.body.removeChild(container);
       } else {
         alert('报告下载失败');
       }
     } catch (error) {
       console.error('Download error:', error);
       alert('报告下载失败');
+    } finally {
+      setDownloadingPDF(false);
     }
   };
 
@@ -310,8 +359,16 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
       {/* 底部操作区 */}
       <div className="pt-16 border-t border-slate-100 flex flex-col items-center gap-12 print:hidden">
         <div className="flex flex-col md:flex-row gap-4 w-full max-w-xl">
-          <button onClick={handleDownloadPDF} className="flex-1 bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all">
-            下载报告
+          <button onClick={handleDownloadPDF} disabled={downloadingPDF} className="flex-1 bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all disabled:opacity-50">
+            {downloadingPDF ? (
+              <>
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                生成中...
+              </>
+            ) : '下载报告'}
           </button>
           <button onClick={handleShare} className="flex-1 bg-white text-indigo-600 py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 border border-slate-100 shadow-xl hover:bg-indigo-50 transition-all">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
