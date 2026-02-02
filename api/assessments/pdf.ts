@@ -74,130 +74,121 @@ function generateReportHTML(data: {
       box-sizing: border-box;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.8;
       color: #1e293b;
       background: #fff;
-      padding: 40px;
-      max-width: 800px;
-      margin: 0 auto;
+      padding: 30px;
+      font-size: 14px;
     }
     .header {
       text-align: center;
-      margin-bottom: 40px;
-      padding-bottom: 30px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
       border-bottom: 3px solid #4f46e5;
     }
     .logo {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 900;
       color: #4f46e5;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .subtitle {
       color: #64748b;
-      font-size: 14px;
+      font-size: 13px;
     }
     .meta {
-      margin-top: 20px;
-      font-size: 12px;
+      margin-top: 15px;
+      font-size: 11px;
       color: #94a3b8;
     }
     .score-section {
       display: flex;
       justify-content: space-around;
-      margin: 40px 0;
-      padding: 30px;
+      margin: 25px 0;
+      padding: 20px;
       background: #f8fafc;
-      border-radius: 16px;
+      border-radius: 12px;
     }
     .score-item {
       text-align: center;
     }
     .score-value {
-      font-size: 48px;
+      font-size: 36px;
       font-weight: 900;
       color: #4f46e5;
     }
     .score-label {
-      font-size: 12px;
+      font-size: 11px;
       color: #64748b;
-      margin-top: 8px;
+      margin-top: 5px;
       font-weight: 600;
     }
     .level-value {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: #f97316;
     }
     .barrier-value {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       color: #475569;
     }
     .section {
-      margin: 40px 0;
+      margin: 25px 0;
     }
     .section-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800;
       color: #1e293b;
-      margin-bottom: 20px;
-      padding-left: 15px;
+      margin-bottom: 15px;
+      padding-left: 12px;
       border-left: 4px solid #4f46e5;
     }
     .analysis-content {
       background: #f8fafc;
-      padding: 30px;
-      border-radius: 12px;
+      padding: 20px;
+      border-radius: 10px;
       white-space: pre-wrap;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 2;
     }
     .scores-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
+      gap: 10px;
     }
     .score-card {
       background: #f8fafc;
-      padding: 15px;
+      padding: 12px;
       border-radius: 8px;
       text-align: center;
     }
     .score-card-label {
-      font-size: 11px;
+      font-size: 10px;
       color: #64748b;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .score-card-value {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       color: #4f46e5;
     }
     .footer {
-      margin-top: 60px;
-      padding-top: 30px;
+      margin-top: 40px;
+      padding-top: 20px;
       border-top: 1px solid #e2e8f0;
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
       color: #94a3b8;
     }
     .disclaimer {
-      margin-top: 40px;
-      padding: 20px;
+      margin-top: 30px;
+      padding: 15px;
       background: #fef3c7;
       border-radius: 8px;
-      font-size: 12px;
+      font-size: 11px;
       color: #92400e;
-    }
-    @media print {
-      body {
-        padding: 20px;
-      }
-      .score-section {
-        break-inside: avoid;
-      }
     }
   </style>
 </head>
@@ -268,11 +259,6 @@ function generateReportHTML(data: {
     <p>成长阻碍探测器 &copy; ${new Date().getFullYear()}</p>
     <p>基于深层心理学模型与专家 AI 系统开发</p>
   </div>
-
-  <script>
-    // Auto print when opened
-    // window.onload = function() { window.print(); }
-  </script>
 </body>
 </html>
   `;

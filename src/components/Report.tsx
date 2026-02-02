@@ -124,44 +124,44 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
         container.style.position = 'absolute';
         container.style.left = '-9999px';
         container.style.top = '0';
-        container.style.width = '800px';
+        container.style.width = '595px'; // A4 width in pixels at 72dpi
+        container.style.background = 'white';
         container.innerHTML = html;
         document.body.appendChild(container);
 
         // Wait for content to render
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         // Generate PDF using html2canvas and jsPDF
         const canvas = await html2canvas(container, {
           scale: 2,
           useCORS: true,
           logging: false,
+          width: 595,
+          windowWidth: 595,
         });
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdf = new jsPDF('p', 'pt', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-        const imgX = (pdfWidth - imgWidth * ratio) / 2;
 
-        // Calculate pages needed
-        const pageHeight = pdfHeight / ratio;
+        const imgWidth = pdfWidth;
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
         let heightLeft = imgHeight;
         let position = 0;
 
         // Add first page
-        pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
 
         // Add additional pages if needed
         while (heightLeft > 0) {
-          position -= pageHeight;
+          position = -pdfHeight + (imgHeight - heightLeft - pdfHeight);
           pdf.addPage();
-          pdf.addImage(imgData, 'PNG', imgX, position * ratio, imgWidth * ratio, imgHeight * ratio);
-          heightLeft -= pageHeight;
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
         }
 
         // Download PDF
