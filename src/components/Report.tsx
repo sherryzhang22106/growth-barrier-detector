@@ -100,6 +100,33 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
     alert('报告链接已复制，快去分享给朋友吧！');
   };
 
+  const handleDownloadPDF = async () => {
+    if (!assessmentId) {
+      alert('报告尚未生成完成');
+      return;
+    }
+    try {
+      const response = await fetch(`/api/assessments/pdf?id=${assessmentId}`);
+      if (response.ok) {
+        const html = await response.text();
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `成长阻碍报告-${assessmentId.slice(0, 8)}.html`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      } else {
+        alert('报告下载失败');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('报告下载失败');
+    }
+  };
+
   const showContent = data.aiStatus === 'completed' || (isStreaming && streamingContent);
   const showLoading = data.aiStatus === 'generating' && !streamingContent && !isStreaming;
 
@@ -279,8 +306,8 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
       {/* 底部操作区 */}
       <div className="pt-16 border-t border-slate-100 flex flex-col items-center gap-12 print:hidden">
         <div className="flex flex-col md:flex-row gap-4 w-full max-w-xl">
-          <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all">
-            下载 PDF 版分析报告
+          <button onClick={handleDownloadPDF} className="flex-1 bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all">
+            下载报告
           </button>
           <button onClick={handleShare} className="w-full md:w-24 h-24 bg-white text-indigo-600 rounded-[2.5rem] flex items-center justify-center border border-slate-100 shadow-xl hover:bg-indigo-50 transition-all">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>

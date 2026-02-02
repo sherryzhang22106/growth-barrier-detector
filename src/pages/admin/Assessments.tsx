@@ -228,16 +228,16 @@ const AdminAssessments: React.FC = () => {
 
       if (response.ok) {
         const html = await response.text();
-        // Open in new window for printing
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(html);
-          printWindow.document.close();
-          // Auto print after a short delay
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        }
+        // Download as HTML file
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${id}.html`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
       } else {
         alert('报告生成失败');
       }
