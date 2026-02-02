@@ -16,6 +16,7 @@ import AdminLogin from './pages/admin/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminCodes from './pages/admin/Codes';
 import AdminAssessments from './pages/admin/Assessments';
+import ReportView from './pages/ReportView';
 
 type AppState = 'LANDING' | 'ACTIVATION' | 'ACTIVE' | 'REPORT';
 
@@ -306,6 +307,7 @@ const App: React.FC = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainApp />} />
+        <Route path="/report/:id" element={<ReportView />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/admin/login" element={<AdminLogin />} />

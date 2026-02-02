@@ -95,8 +95,12 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
   );
 
   const handleShare = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
+    if (!assessmentId) {
+      alert('报告尚未生成完成');
+      return;
+    }
+    const reportUrl = `${window.location.origin}/report/${assessmentId}`;
+    navigator.clipboard.writeText(reportUrl);
     alert('报告链接已复制，快去分享给朋友吧！');
   };
 
@@ -309,8 +313,9 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
           <button onClick={handleDownloadPDF} className="flex-1 bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all">
             下载报告
           </button>
-          <button onClick={handleShare} className="w-full md:w-24 h-24 bg-white text-indigo-600 rounded-[2.5rem] flex items-center justify-center border border-slate-100 shadow-xl hover:bg-indigo-50 transition-all">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          <button onClick={handleShare} className="flex-1 bg-white text-indigo-600 py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 border border-slate-100 shadow-xl hover:bg-indigo-50 transition-all">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            分享报告
           </button>
         </div>
         <button onClick={onMeToo} className="flex flex-col items-center gap-4 group">
