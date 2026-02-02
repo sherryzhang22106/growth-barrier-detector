@@ -165,6 +165,81 @@ export const api = {
       error: result.message || result.error,
     };
   },
+
+  /**
+   * Trigger AI analysis with streaming output
+   */
+  triggerAIAnalysisStream: async (
+    assessmentId: string,
+    userData: any,
+    onChunk: (content: string) => void,
+    onComplete: (fullContent: string) => void,
+    onError: (error: string) => void
+  ): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE}/ai?action=analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assessmentId, userData }),
+      });
+
+      if (!response.ok) {
+        onError('AI 分析请求失败');
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+      let completed = false;
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+
+                if (parsed.error) {
+                  onError(parsed.error);
+                  return;
+                }
+
+                if (parsed.done) {
+                  completed = true;
+                  onComplete(parsed.fullContent || fullContent);
+                  return;
+                }
+
+                if (parsed.content) {
+                  fullContent += parsed.content;
+                  onChunk(parsed.content);
+                }
+              } catch (e) {
+                // Ignore parse errors for incomplete chunks
+              }
+            }
+          }
+        }
+
+        // Fallback: if stream ended without done signal
+        if (!completed && fullContent) {
+          onComplete(fullContent);
+        }
+      }
+    } catch (error) {
+      console.error('AI Stream Error:', error);
+      onError('网络错误，请检查连接');
+    }
+  },
 };
 
 // Admin API functions

@@ -36,6 +36,8 @@ const MainApp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
   const [pendingProgress, setPendingProgress] = useState<{responses: AssessmentResponse} | null>(null);
+  const [streamingContent, setStreamingContent] = useState<string>('');
+  const [isStreaming, setIsStreaming] = useState(false);
   const { toasts, toast, removeToast } = useToast();
 
   useEffect(() => {
@@ -83,25 +85,40 @@ const MainApp: React.FC = () => {
   const triggerAIAnalysis = async (id: string, scores: Scores, currentResponses: AssessmentResponse) => {
     try {
       setReport(prev => prev ? { ...prev, aiStatus: 'generating' } : null);
+      setStreamingContent('');
+      setIsStreaming(true);
 
       const userData = formatUserDataForAI(currentResponses, scores);
 
-      // Call secure backend API for AI analysis
-      const result = await api.triggerAIAnalysis(id, userData);
-
-      if (result.success) {
-        setReport(prev => prev ? {
-          ...prev,
-          aiStatus: 'completed',
-          aiAnalysis: result.aiAnalysis,
-          aiGeneratedAt: result.aiGeneratedAt,
-          aiWordCount: result.aiWordCount
-        } : null);
-      } else {
-        throw new Error(result.error || 'AI分析失败');
-      }
+      // Use streaming API for AI analysis
+      await api.triggerAIAnalysisStream(
+        id,
+        userData,
+        // onChunk - called for each piece of content
+        (content: string) => {
+          setStreamingContent(prev => prev + content);
+        },
+        // onComplete - called when streaming is done
+        (fullContent: string) => {
+          setIsStreaming(false);
+          setReport(prev => prev ? {
+            ...prev,
+            aiStatus: 'completed',
+            aiAnalysis: fullContent,
+            aiGeneratedAt: new Date().toISOString(),
+            aiWordCount: fullContent.length
+          } : null);
+        },
+        // onError - called on error
+        (error: string) => {
+          setIsStreaming(false);
+          setReport(prev => prev ? { ...prev, aiStatus: 'failed' } : null);
+          toast.error(error || 'AI分析失败，请稍后重试');
+        }
+      );
     } catch (error) {
       console.error('AI分析失败:', error);
+      setIsStreaming(false);
       setReport(prev => prev ? { ...prev, aiStatus: 'failed' } : null);
       toast.error('AI分析失败，请稍后重试');
     }
@@ -200,7 +217,14 @@ const MainApp: React.FC = () => {
             }} onSubmit={handleSubmit} loading={loading} />
           )}
           {appState === 'REPORT' && report && (
-            <Report data={report} assessmentId={assessmentId || undefined} onRefreshAI={() => assessmentId && triggerAIAnalysis(assessmentId, report.scores, responses)} onMeToo={resetToHome} />
+            <Report
+              data={report}
+              assessmentId={assessmentId || undefined}
+              onRefreshAI={() => assessmentId && triggerAIAnalysis(assessmentId, report.scores, responses)}
+              onMeToo={resetToHome}
+              streamingContent={streamingContent}
+              isStreaming={isStreaming}
+            />
           )}
         </div>
       </main>

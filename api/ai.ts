@@ -4,8 +4,8 @@ import { sanitizeForAI } from './lib/sanitize';
 
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-// Analyze endpoint
-async function analyze(req: VercelRequest, res: VercelResponse) {
+// Streaming analyze endpoint
+async function analyzeStream(req: VercelRequest, res: VercelResponse) {
   const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
   if (!DEEPSEEK_API_KEY) {
@@ -26,6 +26,12 @@ async function analyze(req: VercelRequest, res: VercelResponse) {
   if (!assessment) {
     return res.status(404).json({ error: '测评不存在' });
   }
+
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
   await prisma.assessment.update({
     where: { id: assessmentId },
@@ -52,57 +58,124 @@ async function analyze(req: VercelRequest, res: VercelResponse) {
 
   const prompt = buildAIPrompt(sanitizedUserData);
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        {
-          role: 'system',
-          content: '你是一位资深的"成长观察员"和个人成长导师，致力于通过行为细节揭示一个人的内在防御机制。你的分析深刻、温暖且具有洞察力。'
-        },
-        {
-          role: 'user',
-          content: prompt
+  try {
+    const response = await fetch(DEEPSEEK_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: '你是一位资深的"成长观察员"和个人成长导师，致力于通过行为细节揭示一个人的内在防御机制。你的分析深刻、温暖且具有洞察力。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 8000,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('DeepSeek API error:', errorData);
+      res.write(`data: ${JSON.stringify({ error: 'AI API 调用失败' })}\n\n`);
+      res.end();
+      return;
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+
+            if (data === '[DONE]') {
+              // Save to database
+              await prisma.assessment.update({
+                where: { id: assessmentId },
+                data: {
+                  aiAnalysis: fullContent,
+                  aiStatus: 'completed',
+                  completedAt: new Date(),
+                },
+              });
+
+              res.write(`data: ${JSON.stringify({
+                done: true,
+                fullContent,
+                aiStatus: 'completed',
+                aiWordCount: fullContent.length
+              })}\n\n`);
+              res.end();
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content || '';
+              if (content) {
+                fullContent += content;
+                res.write(`data: ${JSON.stringify({ content })}\n\n`);
+              }
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
         }
-      ],
-      temperature: 0.8,
-      max_tokens: 8000,
-    }),
-  });
+      }
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('DeepSeek API error:', errorData);
-    throw new Error('AI API 调用失败');
+      // Fallback: if stream ended without [DONE]
+      if (fullContent) {
+        await prisma.assessment.update({
+          where: { id: assessmentId },
+          data: {
+            aiAnalysis: fullContent,
+            aiStatus: 'completed',
+            completedAt: new Date(),
+          },
+        });
+
+        res.write(`data: ${JSON.stringify({
+          done: true,
+          fullContent,
+          aiStatus: 'completed',
+          aiWordCount: fullContent.length
+        })}\n\n`);
+      }
+    }
+
+    res.end();
+  } catch (error) {
+    console.error('Stream error:', error);
+    await prisma.assessment.update({
+      where: { id: assessmentId },
+      data: { aiStatus: 'failed' },
+    }).catch(() => {});
+
+    res.write(`data: ${JSON.stringify({ error: 'AI服务错误' })}\n\n`);
+    res.end();
   }
-
-  const data = await response.json();
-  const aiContent = data.choices?.[0]?.message?.content || '';
-
-  await prisma.assessment.update({
-    where: { id: assessmentId },
-    data: {
-      aiAnalysis: aiContent,
-      aiStatus: 'completed',
-      completedAt: new Date(),
-    },
-  });
-
-  return res.status(200).json({
-    success: true,
-    aiAnalysis: aiContent,
-    aiStatus: 'completed',
-    aiGeneratedAt: new Date().toISOString(),
-    aiWordCount: aiContent.length,
-  });
 }
 
-// Report endpoint
+// Report endpoint (non-streaming, for quick JSON response)
 async function report(req: VercelRequest, res: VercelResponse) {
   const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
@@ -305,6 +378,14 @@ ${userData.high_score_summary}
 
 // Main handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: '方法不允许' });
   }
@@ -314,7 +395,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch (action) {
       case 'analyze':
-        return analyze(req, res);
+        return analyzeStream(req, res);
       case 'report':
         return report(req, res);
       default:
@@ -323,7 +404,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('AI API error:', error);
 
-    // Update status to failed if we have an assessmentId
     const { assessmentId } = req.body;
     if (assessmentId) {
       await prisma.assessment.update({

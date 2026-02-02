@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { ReportData } from '../types';
 import { parse } from 'marked';
@@ -10,30 +10,52 @@ interface Props {
   assessmentId?: string;
   onRefreshAI?: () => void;
   onMeToo?: () => void;
+  streamingContent?: string;
+  isStreaming?: boolean;
 }
 
-const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo }) => {
+const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, streamingContent, isStreaming }) => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [openSection, setOpenSection] = useState<number | null>(0);
   const [renderedMarkdown, setRenderedMarkdown] = useState<string>('');
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when streaming
+  useEffect(() => {
+    if (isStreaming && contentRef.current) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+    }
+  }, [streamingContent, isStreaming]);
 
   useEffect(() => {
-    if (data.aiStatus === 'generating') {
+    if (isStreaming && streamingContent) {
+      // Update progress based on content length (estimate 6000 chars total)
+      const estimatedTotal = 6000;
+      const progress = Math.min(99, (streamingContent.length / estimatedTotal) * 100);
+      setLoadingProgress(progress);
+
+      // Render streaming content
+      const rawHtml = parse(streamingContent);
+      const sanitizedHtml = DOMPurify.sanitize(rawHtml as string, {
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'blockquote', 'hr'],
+        ALLOWED_ATTR: [],
+      });
+      setRenderedMarkdown(sanitizedHtml);
+    } else if (data.aiStatus === 'generating' && !streamingContent) {
       const interval = setInterval(() => {
         setLoadingProgress(prev => (prev >= 99 ? 99 : prev + 0.2));
-      }, 1500); // 极慢速度，体现长篇大论的深度创作
+      }, 1500);
       return () => clearInterval(interval);
     } else if (data.aiStatus === 'completed' && data.aiAnalysis) {
       setLoadingProgress(100);
       const rawHtml = parse(data.aiAnalysis);
-      // Sanitize HTML to prevent XSS attacks
       const sanitizedHtml = DOMPurify.sanitize(rawHtml as string, {
         ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'blockquote', 'hr'],
         ALLOWED_ATTR: [],
       });
       setRenderedMarkdown(sanitizedHtml);
     }
-  }, [data.aiStatus, data.aiAnalysis]);
+  }, [data.aiStatus, data.aiAnalysis, streamingContent, isStreaming]);
 
   const radarData = Object.entries(data.scores.beliefScores).map(([subject, value]) => ({
     subject,
@@ -50,7 +72,7 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo }) =
 
   const Section = ({ title, icon, children, index }: { title: string, icon: React.ReactNode, children?: React.ReactNode, index: number }) => (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden mb-6 transition-all">
-      <button 
+      <button
         onClick={() => setOpenSection(openSection === index ? null : index)}
         className="w-full px-8 py-6 flex items-center justify-between group"
       >
@@ -77,6 +99,9 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo }) =
     navigator.clipboard.writeText(url);
     alert('报告链接已复制，快去分享给朋友吧！');
   };
+
+  const showContent = data.aiStatus === 'completed' || (isStreaming && streamingContent);
+  const showLoading = data.aiStatus === 'generating' && !streamingContent && !isStreaming;
 
   return (
     <div className="max-w-4xl mx-auto pb-24 space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -145,17 +170,30 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo }) =
           <div className="absolute top-0 right-0 p-8 opacity-5">
             <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01705C7.91248 16 7.01705 16.8954 7.01705 18V21H4.01705V18C4.01705 15.2386 6.25562 13 9.01705 13H12.017C14.7785 13 17.017 15.2386 17.017 18V21H14.017ZM12.017 11C14.2262 11 16.0171 9.20914 16.0171 7C16.0171 4.79086 14.2262 3 12.0171 3C9.80791 3 8.01705 4.79086 8.01705 7C8.01705 9.20914 9.80791 11 12.017 11Z" /></svg>
           </div>
-          
+
           <h3 className="text-3xl font-black mb-12 flex items-center gap-4 text-slate-900 tracking-tight">
             成长观察员：生命脚本洞察
+            {isStreaming && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                实时生成中
+              </span>
+            )}
           </h3>
-          
-          {data.aiStatus === 'completed' ? (
-            <article 
-              className="report-markdown"
-              dangerouslySetInnerHTML={{ __html: renderedMarkdown }}
-            />
-          ) : (
+
+          {showContent ? (
+            <div ref={contentRef} className={`report-markdown ${isStreaming ? 'max-h-[600px] overflow-y-auto' : ''}`}>
+              <article
+                dangerouslySetInnerHTML={{ __html: renderedMarkdown }}
+              />
+              {isStreaming && (
+                <div className="mt-4 flex items-center gap-2 text-indigo-500">
+                  <span className="inline-block w-2 h-4 bg-indigo-500 animate-pulse"></span>
+                  <span className="text-sm font-medium">正在输入...</span>
+                </div>
+              )}
+            </div>
+          ) : showLoading ? (
             <div className="text-center py-32 space-y-12">
               <div className="relative w-48 h-48 mx-auto">
                 <div className="absolute inset-0 border-[16px] border-indigo-100/50 rounded-full"></div>
@@ -168,6 +206,26 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo }) =
               <div className="space-y-4">
                 <h4 className="text-2xl font-black text-slate-800 tracking-tight">正在撰写约 6000 字的生命脚本分析...</h4>
                 <p className="text-slate-400 font-medium max-w-md mx-auto">成长观察员正在穿透表象，解析潜意识深处那些习以为常的行为惯性。这个过程通常需要 1-2 分钟。</p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-slate-400">等待 AI 分析...</p>
+            </div>
+          )}
+
+          {/* Progress bar for streaming */}
+          {isStreaming && (
+            <div className="mt-8">
+              <div className="flex justify-between text-sm text-slate-500 mb-2">
+                <span>生成进度</span>
+                <span>{Math.floor(loadingProgress)}% · 约 {streamingContent?.length || 0} 字</span>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
+                  style={{ width: `${loadingProgress}%` }}
+                ></div>
               </div>
             </div>
           )}
