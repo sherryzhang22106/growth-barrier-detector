@@ -236,13 +236,18 @@ const AdminAssessments: React.FC = () => {
         container.style.position = 'absolute';
         container.style.left = '-9999px';
         container.style.top = '0';
-        container.style.width = '595px'; // A4 width in pixels at 72dpi
+        container.style.width = '595px';
         container.style.background = 'white';
+        container.style.padding = '0';
+        container.style.margin = '0';
         container.innerHTML = html;
         document.body.appendChild(container);
 
-        // Wait for content to render
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Wait for content to fully render
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Get actual content height
+        const contentHeight = container.scrollHeight;
 
         // Generate PDF using html2canvas and jsPDF
         const canvas = await html2canvas(container, {
@@ -250,7 +255,11 @@ const AdminAssessments: React.FC = () => {
           useCORS: true,
           logging: false,
           width: 595,
+          height: contentHeight,
           windowWidth: 595,
+          windowHeight: contentHeight,
+          scrollY: 0,
+          scrollX: 0,
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -270,7 +279,7 @@ const AdminAssessments: React.FC = () => {
 
         // Add additional pages if needed
         while (heightLeft > 0) {
-          position = -pdfHeight + (imgHeight - heightLeft - pdfHeight);
+          position -= pdfHeight;
           pdf.addPage();
           pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
           heightLeft -= pdfHeight;
