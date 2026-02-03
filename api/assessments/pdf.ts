@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import prisma from '../lib/db';
-import { withAuth } from '../lib/auth';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -264,4 +263,4 @@ function generateReportHTML(data: {
   `;
 }
 
-export default withAuth(handler);
+export default handler;
