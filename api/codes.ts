@@ -57,9 +57,21 @@ async function listCodes(req: VercelRequest, res: VercelResponse) {
   });
 }
 
+// Valid package types
+const VALID_PACKAGE_TYPES = ['STANDARD', 'PREMIUM', 'ENTERPRISE'];
+
 // Create codes (admin only)
 async function createCodes(req: VercelRequest, res: VercelResponse) {
   const { count = 1, packageType = 'STANDARD', prefix = 'GROW', expiresInDays } = req.body;
+
+  // Validate packageType
+  const normalizedPackageType = String(packageType).toUpperCase();
+  if (!VALID_PACKAGE_TYPES.includes(normalizedPackageType)) {
+    return res.status(400).json({
+      success: false,
+      error: `无效的套餐类型，有效值为: ${VALID_PACKAGE_TYPES.join(', ')}`
+    });
+  }
 
   const codeCount = Math.min(100, Math.max(1, Number(count) || 1));
   const sanitizedPrefix = sanitizeCode(prefix).slice(0, 8) || 'GROW';
@@ -79,28 +91,36 @@ async function createCodes(req: VercelRequest, res: VercelResponse) {
   }
 
   if (codes.length === 0) {
-    return res.status(500).json({ error: '无法生成唯一兑换码' });
+    return res.status(500).json({ success: false, error: '无法生成唯一兑换码' });
   }
 
   const expiresAt = expiresInDays
     ? new Date(Date.now() + parseInt(expiresInDays, 10) * 24 * 60 * 60 * 1000)
     : null;
 
-  await prisma.redemptionCode.createMany({
-    data: codes.map(code => ({
-      code,
-      packageType,
-      status: 'UNUSED',
-      expiresAt,
-    })),
-  });
+  try {
+    await prisma.redemptionCode.createMany({
+      data: codes.map(code => ({
+        code,
+        packageType: normalizedPackageType,
+        status: 'UNUSED',
+        expiresAt,
+      })),
+    });
+  } catch (dbError: any) {
+    console.error('Database error creating codes:', dbError);
+    return res.status(500).json({
+      success: false,
+      error: `数据库错误: ${dbError.message || '创建兑换码失败'}`
+    });
+  }
 
   return res.status(201).json({
     success: true,
     data: {
       codes,
       count: codes.length,
-      packageType,
+      packageType: normalizedPackageType,
       expiresAt,
     },
   });

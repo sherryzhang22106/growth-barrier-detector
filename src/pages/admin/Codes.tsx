@@ -76,10 +76,11 @@ const AdminCodes: React.FC = () => {
         loadCodes();
         alert(`成功创建 ${result.data?.count || createForm.count} 个兑换码`);
       } else {
-        alert(result.error || '创建失败');
+        alert(`生成失败: ${result.error || result.message || '未知错误'}`);
       }
     } catch (error) {
-      alert('创建失败');
+      console.error('Create codes error:', error);
+      alert('生成失败: 网络错误');
     } finally {
       setCreating(false);
     }
