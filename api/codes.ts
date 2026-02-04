@@ -170,6 +170,30 @@ async function revokeCode(req: VercelRequest, res: VercelResponse) {
   });
 }
 
+// Delete all unused codes (admin only)
+async function deleteAllUnused(req: VercelRequest, res: VercelResponse) {
+  try {
+    const result = await prisma.redemptionCode.deleteMany({
+      where: {
+        status: 'UNUSED',
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        deletedCount: result.count,
+      },
+    });
+  } catch (error: any) {
+    console.error('Delete unused codes error:', error);
+    return res.status(500).json({
+      success: false,
+      error: `删除失败: ${error.message || '未知错误'}`,
+    });
+  }
+}
+
 // Validate code (public)
 async function validateCode(req: VercelRequest, res: VercelResponse) {
   const { code, visitorId } = req.body;
@@ -253,6 +277,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return authRes.status(405).json({ error: '方法不允许' });
           }
           return revokeCode(authReq, authRes);
+
+        case 'delete-all-unused':
+          if (req.method !== 'POST') {
+            return authRes.status(405).json({ error: '方法不允许' });
+          }
+          return deleteAllUnused(authReq, authRes);
 
         default:
           return authRes.status(400).json({ error: '无效的操作' });

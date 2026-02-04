@@ -318,6 +318,16 @@ export const adminApi = {
   },
 
   /**
+   * Delete all unused redemption codes
+   */
+  deleteAllUnused: async (): Promise<any> => {
+    return fetchApi('/codes?action=delete-all-unused', {
+      method: 'POST',
+      headers: adminApi.getAuthHeaders(),
+    });
+  },
+
+  /**
    * List assessments
    */
   listAssessments: async (params: {

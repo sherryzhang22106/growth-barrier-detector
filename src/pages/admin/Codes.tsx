@@ -106,6 +106,22 @@ const AdminCodes: React.FC = () => {
     navigate('/admin/login');
   };
 
+  const handleDeleteAllUnused = async () => {
+    if (!confirm('确定要删除所有未使用的兑换码吗？此操作不可恢复！')) return;
+
+    try {
+      const result = await adminApi.deleteAllUnused();
+      if (result.success) {
+        loadCodes();
+        alert(`成功删除 ${result.data?.deletedCount || 0} 个未使用的兑换码`);
+      } else {
+        alert(result.error || '删除失败');
+      }
+    } catch (error) {
+      alert('删除失败');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       UNUSED: 'bg-emerald-50 text-emerald-600',
@@ -165,12 +181,20 @@ const AdminCodes: React.FC = () => {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-black text-slate-900">兑换码管理</h2>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all"
-          >
-            批量生成
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleDeleteAllUnused}
+              className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-200 hover:bg-red-600 transition-all"
+            >
+              清除未使用
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all"
+            >
+              批量生成
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
