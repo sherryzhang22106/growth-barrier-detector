@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { adminApi } from '../../services/api';
+import * as XLSX from 'xlsx';
 
 interface Code {
   code: string;
@@ -12,12 +13,21 @@ interface Code {
   assessmentCount: number;
 }
 
+interface GeneratedCodesResult {
+  codes: string[];
+  count: number;
+  packageType: string;
+  expiresAt: string | null;
+}
+
 const AdminCodes: React.FC = () => {
   const navigate = useNavigate();
   const [codes, setCodes] = useState<Code[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [generatedResult, setGeneratedResult] = useState<GeneratedCodesResult | null>(null);
   const [createForm, setCreateForm] = useState({
     count: 10,
     packageType: 'STANDARD',
@@ -73,8 +83,9 @@ const AdminCodes: React.FC = () => {
 
       if (result.success) {
         setShowCreateModal(false);
+        setGeneratedResult(result.data);
+        setShowResultModal(true);
         loadCodes();
-        alert(`成功创建 ${result.data?.count || createForm.count} 个兑换码`);
       } else {
         alert(`生成失败: ${result.error || result.message || '未知错误'}`);
       }
@@ -84,6 +95,34 @@ const AdminCodes: React.FC = () => {
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleExportExcel = () => {
+    if (!generatedResult) return;
+
+    const data = generatedResult.codes.map((code, index) => ({
+      '序号': index + 1,
+      '兑换码': code,
+      '套餐类型': generatedResult.packageType,
+      '状态': '未使用',
+      '有效期': generatedResult.expiresAt ? new Date(generatedResult.expiresAt).toLocaleDateString('zh-CN') : '永久有效',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '兑换码');
+
+    // 设置列宽
+    ws['!cols'] = [
+      { wch: 6 },   // 序号
+      { wch: 20 },  // 兑换码
+      { wch: 12 },  // 套餐类型
+      { wch: 10 },  // 状态
+      { wch: 15 },  // 有效期
+    ];
+
+    const fileName = `兑换码_${generatedResult.packageType}_${generatedResult.count}个_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   };
 
   const handleRevoke = async (code: string) => {
@@ -362,6 +401,72 @@ const AdminCodes: React.FC = () => {
                 className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold disabled:opacity-50"
               >
                 {creating ? '生成中...' : '生成'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Result Modal */}
+      {showResultModal && generatedResult && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-slate-900">生成成功</h3>
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-sm font-bold">
+                {generatedResult.count} 个
+              </span>
+            </div>
+
+            <div className="mb-4 p-4 bg-slate-50 rounded-xl">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-slate-500">套餐类型：</span>
+                  <span className="font-bold text-slate-700">{generatedResult.packageType}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">有效期：</span>
+                  <span className="font-bold text-slate-700">
+                    {generatedResult.expiresAt ? new Date(generatedResult.expiresAt).toLocaleDateString('zh-CN') : '永久'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto mb-6 border border-slate-100 rounded-xl">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500">序号</th>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500">兑换码</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {generatedResult.codes.map((code, index) => (
+                    <tr key={code} className="hover:bg-slate-50">
+                      <td className="px-4 py-2 text-slate-500">{index + 1}</td>
+                      <td className="px-4 py-2 font-mono font-bold text-slate-900">{code}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowResultModal(false)}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold"
+              >
+                关闭
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                导出 Excel
               </button>
             </div>
           </div>
