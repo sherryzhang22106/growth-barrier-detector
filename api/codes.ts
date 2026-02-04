@@ -2,12 +2,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import prisma from './lib/db';
 import { withAuth } from './lib/auth';
 import { sanitizeCode } from './lib/sanitize';
+import crypto from 'crypto';
 
 function generateCode(prefix: string = 'GROW'): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = prefix;
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  // 使用 crypto 生成更随机的字符，增加到 8 位
+  const randomBytes = crypto.randomBytes(8);
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(randomBytes[i] % chars.length);
   }
   return code;
 }
