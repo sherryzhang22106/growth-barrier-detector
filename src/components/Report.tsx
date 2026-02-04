@@ -67,7 +67,7 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
 
   const barData = Object.entries(data.scores.patternScores).map(([name, value]) => ({
     name,
-    value,
+    value: Number((value as number).toFixed(2)),
   }));
 
   const COLORS = ['#4f46e5', '#7c3aed', '#db2777', '#dc2626', '#d97706', '#059669'];

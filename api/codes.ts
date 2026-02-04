@@ -62,7 +62,10 @@ const VALID_PACKAGE_TYPES = ['STANDARD', 'PREMIUM', 'ENTERPRISE'];
 
 // Create codes (admin only)
 async function createCodes(req: VercelRequest, res: VercelResponse) {
-  const { count = 1, packageType = 'STANDARD', prefix = 'GROW', expiresInDays } = req.body;
+  const { count = 1, packageType = 'STANDARD', prefix = 'GROW', expiresInDays } = req.body || {};
+
+  console.log('createCodes request body:', req.body);
+  console.log('count value:', count, 'type:', typeof count);
 
   // Validate packageType
   const normalizedPackageType = String(packageType).toUpperCase();
@@ -73,7 +76,9 @@ async function createCodes(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const codeCount = Math.min(100, Math.max(1, Number(count) || 1));
+  const codeCount = Math.min(100, Math.max(1, parseInt(String(count), 10) || 1));
+  console.log('codeCount after parsing:', codeCount);
+
   const sanitizedPrefix = sanitizeCode(prefix).slice(0, 8) || 'GROW';
 
   const codes: string[] = [];
