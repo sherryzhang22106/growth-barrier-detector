@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -25,9 +25,9 @@ model Assessment {
   visitorId      String          @map("visitor_id")
   code           String
   redemptionCode RedemptionCode  @relation(fields: [code], references: [code])
-  responses      Json
-  scores         Json
-  aiAnalysis     String?         @db.Text @map("ai_analysis")
+  responses      String          // JSON stored as string for SQLite
+  scores         String          // JSON stored as string for SQLite
+  aiAnalysis     String?         @map("ai_analysis")
   aiStatus       String          @default("pending") @map("ai_status")
   createdAt      DateTime        @default(now()) @map("created_at")
   completedAt    DateTime?       @map("completed_at")
@@ -47,8 +47,24 @@ model Admin {
 model Progress {
   id        String   @id @default(uuid())
   userId    String   @unique @map("user_id")
-  responses Json
+  responses String   // JSON stored as string for SQLite
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("progress")
+}
+
+model Order {
+  id            String    @id @default(uuid())
+  visitorId     String    @map("visitor_id")
+  outTradeNo    String    @unique @map("out_trade_no")  // 商户订单号
+  transactionId String?   @map("transaction_id")        // 微信支付订单号
+  amount        Int                                      // 金额（分）
+  status        String    @default("PENDING")           // PENDING, PAID, FAILED, REFUNDED
+  paymentMethod String?   @map("payment_method")        // WECHAT_NATIVE, WECHAT_JSAPI, CODE
+  codeUrl       String?   @map("code_url")              // Native支付二维码链接
+  openId        String?   @map("open_id")               // 用户openid（JSAPI支付）
+  createdAt     DateTime  @default(now()) @map("created_at")
+  paidAt        DateTime? @map("paid_at")
+
+  @@map("orders")
 }

@@ -35,16 +35,16 @@ const ReportModal: React.FC<ReportModalProps> = ({ assessment, onClose, onDownlo
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
           <div>
-            <h3 className="text-lg font-black text-slate-900">测评报告详情</h3>
-            <p className="text-sm text-slate-500">兑换码: {assessment.code}</p>
+            <h3 className="text-lg font-black text-stone-900">测评报告详情</h3>
+            <p className="text-sm text-stone-500">兑换码: {assessment.code}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => onDownloadPDF(assessment.id)}
               disabled={downloading || assessment.aiStatus !== 'completed'}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold text-sm hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
             >
               {downloading ? (
                 <>
@@ -65,9 +65,9 @@ const ReportModal: React.FC<ReportModalProps> = ({ assessment, onClose, onDownlo
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-all"
+              className="p-2 hover:bg-stone-100 rounded-lg transition-all"
             >
-              <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -78,26 +78,26 @@ const ReportModal: React.FC<ReportModalProps> = ({ assessment, onClose, onDownlo
         <div className="flex-1 overflow-y-auto p-6">
           {/* Score Summary */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-indigo-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-black text-indigo-600">{assessment.scores?.overallIndex || '-'}</div>
-              <div className="text-xs text-indigo-600 font-bold mt-1">阻碍指数</div>
+            <div className="bg-orange-50 rounded-xl p-4 text-center">
+              <div className="text-3xl font-black text-orange-600">{Math.round((assessment.scores?.overallIndex || 0) * 10)}分</div>
+              <div className="text-xs text-orange-600 font-bold mt-1">内耗指数</div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 text-center">
-              <div className="text-lg font-black text-slate-700">{assessment.scores?.level || '-'}</div>
-              <div className="text-xs text-slate-500 font-bold mt-1">状态等级</div>
+            <div className="bg-stone-50 rounded-xl p-4 text-center">
+              <div className="text-lg font-black text-stone-700">{assessment.scores?.level || '-'}</div>
+              <div className="text-xs text-stone-500 font-bold mt-1">状态等级</div>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4 text-center">
-              <div className="text-lg font-black text-slate-700">{assessment.scores?.coreBarrier || '-'}</div>
-              <div className="text-xs text-slate-500 font-bold mt-1">核心卡点</div>
+            <div className="bg-stone-50 rounded-xl p-4 text-center">
+              <div className="text-lg font-black text-stone-700">{assessment.scores?.coreBarrier || '-'}</div>
+              <div className="text-xs text-stone-500 font-bold mt-1">核心内耗点</div>
             </div>
           </div>
 
           {/* AI Analysis */}
           <div className="mb-6">
-            <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-3">AI 深度分析报告</h4>
+            <h4 className="text-sm font-black text-stone-700 uppercase tracking-wider mb-3">AI 深度分析报告</h4>
             {assessment.aiStatus === 'completed' && assessment.aiAnalysis ? (
-              <div className="bg-slate-50 rounded-xl p-6 prose prose-slate max-w-none">
-                <div className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">
+              <div className="bg-stone-50 rounded-xl p-6 prose prose-stone max-w-none">
+                <div className="whitespace-pre-wrap text-sm text-stone-700 leading-relaxed">
                   {assessment.aiAnalysis}
                 </div>
               </div>
@@ -111,8 +111,8 @@ const ReportModal: React.FC<ReportModalProps> = ({ assessment, onClose, onDownlo
                 <p className="text-red-600 font-bold">AI 报告生成失败</p>
               </div>
             ) : (
-              <div className="bg-slate-100 rounded-xl p-6 text-center">
-                <p className="text-slate-500 font-bold">暂无 AI 分析报告</p>
+              <div className="bg-stone-100 rounded-xl p-6 text-center">
+                <p className="text-stone-500 font-bold">暂无 AI 分析报告</p>
               </div>
             )}
           </div>
@@ -120,26 +120,31 @@ const ReportModal: React.FC<ReportModalProps> = ({ assessment, onClose, onDownlo
           {/* Scores Detail */}
           {assessment.scores?.beliefScores && (
             <div className="mb-6">
-              <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-3">信念维度得分</h4>
+              <h4 className="text-sm font-black text-stone-700 uppercase tracking-wider mb-3">维度得分</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(assessment.scores.beliefScores).map(([key, value]) => (
-                  <div key={key} className="bg-slate-50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 mb-1">{key}</div>
-                    <div className="text-lg font-black text-slate-700">{value}</div>
-                  </div>
-                ))}
+                {Object.entries(assessment.scores.beliefScores).map(([key, value]) => {
+                  const score = Math.round(Number(value) * 10);
+                  const percent = Math.round(Number(value) * 20);
+                  return (
+                    <div key={key} className="bg-stone-50 rounded-lg p-3">
+                      <div className="text-xs text-stone-500 mb-1">{key}</div>
+                      <div className="text-lg font-black text-orange-600">{score}分</div>
+                      <div className="text-xs text-stone-400">内耗程度 {percent}%</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {assessment.scores?.patternScores && (
             <div>
-              <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-3">行为模式得分</h4>
+              <h4 className="text-sm font-black text-stone-700 uppercase tracking-wider mb-3">行为模式得分</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {Object.entries(assessment.scores.patternScores).map(([key, value]) => (
-                  <div key={key} className="bg-slate-50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 mb-1">{key}</div>
-                    <div className="text-lg font-black text-slate-700">{value}</div>
+                  <div key={key} className="bg-stone-50 rounded-lg p-3">
+                    <div className="text-xs text-stone-500 mb-1">{key}</div>
+                    <div className="text-lg font-black text-stone-700">{value}</div>
                   </div>
                 ))}
               </div>
@@ -147,7 +152,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ assessment, onClose, onDownlo
           )}
 
           {/* Meta Info */}
-          <div className="mt-6 pt-6 border-t border-slate-100 text-sm text-slate-500">
+          <div className="mt-6 pt-6 border-t border-stone-100 text-sm text-stone-500">
             <p>创建时间: {new Date(assessment.createdAt).toLocaleString('zh-CN')}</p>
             {assessment.completedAt && (
               <p>完成时间: {new Date(assessment.completedAt).toLocaleString('zh-CN')}</p>
@@ -342,7 +347,7 @@ const AdminAssessments: React.FC = () => {
     const styles: Record<string, string> = {
       completed: 'bg-emerald-50 text-emerald-600',
       generating: 'bg-amber-50 text-amber-600',
-      pending: 'bg-slate-100 text-slate-600',
+      pending: 'bg-stone-100 text-stone-600',
       failed: 'bg-red-50 text-red-600',
     };
     const labels: Record<string, string> = {
@@ -352,46 +357,45 @@ const AdminAssessments: React.FC = () => {
       failed: '失败',
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-bold ${styles[status] || 'bg-slate-50 text-slate-600'}`}>
+      <span className={`px-3 py-1 rounded-full text-xs font-bold ${styles[status] || 'bg-stone-50 text-stone-600'}`}>
         {labels[status] || status}
       </span>
     );
   };
 
   const getLevelColor = (level: string) => {
-    if (level.includes('绿灯')) return 'text-emerald-600';
-    if (level.includes('黄灯')) return 'text-amber-600';
-    if (level.includes('橙灯')) return 'text-orange-600';
-    if (level.includes('红灯')) return 'text-red-600';
-    if (level.includes('紧急')) return 'text-red-700';
-    return 'text-slate-600';
+    if (level.includes('能量自由')) return 'text-emerald-600';
+    if (level.includes('轻度')) return 'text-amber-600';
+    if (level.includes('中度')) return 'text-orange-600';
+    if (level.includes('重度')) return 'text-red-600';
+    return 'text-stone-600';
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-40">
+      <header className="bg-white border-b border-stone-100 px-6 py-4 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-rose-500 rounded-xl flex items-center justify-center shadow-md shadow-orange-200">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-black text-slate-900">管理后台</h1>
-              <p className="text-xs text-slate-400">成长阻碍探测器</p>
+              <h1 className="text-lg font-black text-stone-900">管理后台</h1>
+              <p className="text-xs text-stone-400">内耗指数测评系统</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <nav className="flex gap-2">
-              <Link to="/admin/dashboard" className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm">
+              <Link to="/admin/dashboard" className="px-4 py-2 text-stone-600 hover:bg-stone-50 rounded-lg font-bold text-sm">
                 仪表盘
               </Link>
-              <Link to="/admin/codes" className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm">
+              <Link to="/admin/codes" className="px-4 py-2 text-stone-600 hover:bg-stone-50 rounded-lg font-bold text-sm">
                 兑换码
               </Link>
-              <Link to="/admin/assessments" className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-sm">
+              <Link to="/admin/assessments" className="px-4 py-2 bg-orange-50 text-orange-600 rounded-lg font-bold text-sm">
                 测评数据
               </Link>
             </nav>
@@ -405,7 +409,7 @@ const AdminAssessments: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-black text-slate-900">测评数据</h2>
+          <h2 className="text-2xl font-black text-stone-900">测评数据</h2>
           <div className="flex gap-2">
             <button
               onClick={() => handleExport('xlsx')}
@@ -428,8 +432,8 @@ const AdminAssessments: React.FC = () => {
               }}
               className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
                 statusFilter === status
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-white text-stone-600 hover:bg-stone-50 border border-stone-200'
               }`}
             >
               {status === '' ? '全部' :
@@ -442,13 +446,13 @@ const AdminAssessments: React.FC = () => {
 
         {/* Selection Info */}
         {selectedIds.length > 0 && (
-          <div className="mb-4 p-4 bg-indigo-50 rounded-xl flex items-center justify-between">
-            <span className="text-indigo-600 font-bold">
+          <div className="mb-4 p-4 bg-orange-50 rounded-xl flex items-center justify-between">
+            <span className="text-orange-600 font-bold">
               已选择 {selectedIds.length} 条记录
             </span>
             <button
               onClick={() => setSelectedIds([])}
-              className="text-indigo-600 hover:text-indigo-700 font-bold text-sm"
+              className="text-orange-600 hover:text-orange-700 font-bold text-sm"
             >
               清除选择
             </button>
@@ -456,51 +460,51 @@ const AdminAssessments: React.FC = () => {
         )}
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="px-6 py-12 text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto"></div>
+              <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto"></div>
             </div>
           ) : assessments.length === 0 ? (
-            <div className="px-6 py-12 text-center text-slate-400">
+            <div className="px-6 py-12 text-center text-stone-400">
               暂无测评数据
             </div>
           ) : (
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-100">
+              <thead className="bg-stone-50 border-b border-stone-100">
                 <tr>
                   <th className="px-4 py-4 text-left">
                     <input
                       type="checkbox"
                       checked={selectedIds.length === assessments.length}
                       onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-slate-300"
+                      className="w-4 h-4 rounded border-stone-300"
                     />
                   </th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">兑换码</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">阻碍指数</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">状态等级</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">核心卡点</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">AI状态</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">创建时间</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase">操作</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">兑换码</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">内耗指数</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">状态等级</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">核心内耗点</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">AI状态</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">创建时间</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-stone-500 uppercase">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-stone-100">
                 {assessments.map((assessment) => (
-                  <tr key={assessment.id} className="hover:bg-slate-50">
+                  <tr key={assessment.id} className="hover:bg-stone-50">
                     <td className="px-4 py-4">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(assessment.id)}
                         onChange={() => toggleSelect(assessment.id)}
-                        className="w-4 h-4 rounded border-slate-300"
+                        className="w-4 h-4 rounded border-stone-300"
                       />
                     </td>
-                    <td className="px-4 py-4 font-mono font-bold text-slate-900">{assessment.code}</td>
+                    <td className="px-4 py-4 font-mono font-bold text-stone-900">{assessment.code}</td>
                     <td className="px-4 py-4">
-                      <span className="text-2xl font-black text-indigo-600">
-                        {assessment.scores?.overallIndex || '-'}
+                      <span className="text-2xl font-black text-orange-600">
+                        {Math.round((assessment.scores?.overallIndex || 0) * 10)}分
                       </span>
                     </td>
                     <td className="px-4 py-4">
@@ -508,18 +512,18 @@ const AdminAssessments: React.FC = () => {
                         {assessment.scores?.level || '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-600">
+                    <td className="px-4 py-4 text-sm text-stone-600">
                       {assessment.scores?.coreBarrier || '-'}
                     </td>
                     <td className="px-4 py-4">{getStatusBadge(assessment.aiStatus)}</td>
-                    <td className="px-4 py-4 text-sm text-slate-500">
+                    <td className="px-4 py-4 text-sm text-stone-500">
                       {new Date(assessment.createdAt).toLocaleString('zh-CN')}
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1">
                         <button
                           onClick={() => handleViewReport(assessment)}
-                          className="text-indigo-600 hover:text-indigo-700 font-bold text-sm"
+                          className="text-orange-600 hover:text-orange-700 font-bold text-sm"
                         >
                           查看报告
                         </button>
@@ -546,17 +550,17 @@ const AdminAssessments: React.FC = () => {
             <button
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
               disabled={pagination.page === 1}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg font-bold text-sm disabled:opacity-50"
+              className="px-4 py-2 bg-white border border-stone-200 rounded-lg font-bold text-sm disabled:opacity-50"
             >
               上一页
             </button>
-            <span className="px-4 py-2 text-slate-600 text-sm">
+            <span className="px-4 py-2 text-stone-600 text-sm">
               {pagination.page} / {pagination.totalPages}
             </span>
             <button
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
               disabled={pagination.page === pagination.totalPages}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg font-bold text-sm disabled:opacity-50"
+              className="px-4 py-2 bg-white border border-stone-200 rounded-lg font-bold text-sm disabled:opacity-50"
             >
               下一页
             </button>

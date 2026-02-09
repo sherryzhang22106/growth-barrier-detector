@@ -32,17 +32,17 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl p-10 shadow-2xl shadow-slate-200 border border-slate-100">
+        <div className="bg-white rounded-3xl p-10 shadow-2xl shadow-stone-200 border border-stone-100">
           <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-200">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-orange-200">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-black text-slate-900">管理后台</h1>
-            <p className="text-slate-500 mt-2 text-sm">成长阻碍探测器</p>
+            <h1 className="text-2xl font-black text-stone-900">管理后台</h1>
+            <p className="text-stone-500 mt-2 text-sm">内耗指数测评系统</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -53,32 +53,32 @@ const AdminLogin: React.FC = () => {
             )}
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">用户名</label>
+              <label className="block text-sm font-bold text-stone-700 mb-2">用户名</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-5 py-4 rounded-xl border-2 border-slate-100 focus:border-indigo-500 outline-none transition-all text-slate-800 font-medium"
+                className="w-full px-5 py-4 rounded-xl border-2 border-stone-100 focus:border-orange-500 outline-none transition-all text-stone-800 font-medium"
                 placeholder="请输入用户名"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">密码</label>
+              <label className="block text-sm font-bold text-stone-700 mb-2">密码</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-5 py-4 pr-14 rounded-xl border-2 border-slate-100 focus:border-indigo-500 outline-none transition-all text-slate-800 font-medium"
+                  className="w-full px-5 py-4 pr-14 rounded-xl border-2 border-stone-100 focus:border-orange-500 outline-none transition-all text-stone-800 font-medium"
                   placeholder="请输入密码"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,14 +97,14 @@ const AdminLogin: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-orange-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 transition-all disabled:opacity-50"
             >
               {loading ? '登录中...' : '登录'}
             </button>
           </form>
 
           <div className="mt-8 text-center">
-            <a href="/" className="text-sm text-slate-400 hover:text-indigo-600 transition-colors">
+            <a href="/" className="text-sm text-stone-400 hover:text-orange-600 transition-colors">
               返回首页
             </a>
           </div>

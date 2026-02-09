@@ -1,98 +1,474 @@
 
 import { Question } from './types';
 
-export const BELIEF_DIMENSIONS = {
-  '金钱与价值': { weight: 0.12, questions: [6, 7, 8] },
-  '自我价值': { weight: 0.20, questions: [9, 10, 11] },
-  '能力信念': { weight: 0.15, questions: [12, 13, 14] },
-  '关系模式': { weight: 0.13, questions: [15, 16, 17] },
-  '时间与年龄': { weight: 0.08, questions: [18, 19, 20] },
-  '风险与失败': { weight: 0.12, questions: [21, 22, 23] },
-  '世界观': { weight: 0.08, questions: [24, 25, 26] },
-  '完美主义': { weight: 0.12, questions: [27, 28, 29] }
+// 内耗维度定义
+export const OVERTHINKING_DIMENSIONS = {
+  '思维内耗': { maxScore: 28, questions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+  '情绪内耗': { maxScore: 28, questions: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+  '行动内耗': { maxScore: 24, questions: [21, 22, 23, 24, 25, 26, 27, 28] },
+  '关系内耗': { maxScore: 20, questions: [29, 30, 31, 32, 33, 34, 35] }
 };
 
-export const BEHAVIOR_PATTERNS = {
-  '拖延与逃避': [30, 31, 32],
-  '自我破坏': [33, 34, 35],
-  '过度补偿': [36, 37, 38],
-  '过度防御': [39, 40, 41],
-  '能量内耗': [42, 43, 44],
-  '完美主义行为': [45, 46, 47]
-};
-
-export const QUESTIONS: Question[] = [
-  // Page 1: Basic (1-5)
-  { id: 1, text: '您的年龄段？', type: 'CHOICE', options: [{ value: 0, label: '18-25岁' }, { value: 1, label: '26-35岁' }, { value: 2, label: '36-45岁' }, { value: 3, label: '46岁以上' }] },
-  { id: 2, text: '当前最想突破的领域？', type: 'CHOICE', options: [{ value: 0, label: '职业发展' }, { value: 1, label: '财富增长' }, { value: 2, label: '亲密关系' }, { value: 3, label: '健康管理' }, { value: 4, label: '学习成长' }, { value: 5, label: '创业/副业' }] },
-  { id: 3, text: '您感觉被"卡住"多久了？', type: 'CHOICE', options: [{ value: 1.0, label: '最近3个月内' }, { value: 1.1, label: '半年到1年' }, { value: 1.2, label: '1-3年' }, { value: 1.3, label: '3年以上' }] },
-  { id: 4, text: '您对改变的期待是？', type: 'CHOICE', options: [{ value: 0, label: '只是好奇了解自己' }, { value: 1, label: '希望有具体改变方法' }, { value: 2, label: '准备认真执行突破计划' }, { value: 3, label: '已经尝试过很多方法但没用' }] },
-  { id: 5, text: '目前生活满意度？(1-10)', type: 'SCALE', options: Array.from({ length: 10 }).map((_, i) => ({ value: i + 1, label: (i + 1).toString() })) },
-
-  // Page 2-3: Core Beliefs (6-29)
-  // 金钱与价值
-  { id: 6, text: '看到别人赚钱，我的第一反应是：', type: 'CHOICE', dimension: '金钱与价值', options: [{ value: 3, label: '他们肯定有特殊资源/背景/运气' }, { value: 0, label: '我也可以研究方法去做' }, { value: 2, label: '羡慕但觉得自己做不到' }, { value: 4, label: '赚大钱的人道德上有问题' }] },
-  { id: 7, text: '关于"提高收费/要求加薪"，我会：', type: 'CHOICE', dimension: '金钱与价值', options: [{ value: 4, label: '觉得自己不值那个价' }, { value: 3, label: '担心别人觉得我贪心' }, { value: 0, label: '评估价值后合理争取' }, { value: 3, label: '不敢提，怕失去机会' }] },
-  { id: 8, text: '我内心深处相信：', type: 'CHOICE', dimension: '金钱与价值', options: [{ value: 3, label: '钱很难赚，要付出巨大代价' }, { value: 4, label: '我不配拥有很多钱' }, { value: 0, label: '钱是流动的，有付出就有回报' }, { value: 2, label: '谈钱很俗，我更在乎精神追求' }] },
-  // 自我价值
-  { id: 9, text: '当获得赞美时，我通常：', type: 'CHOICE', dimension: '自我价值', options: [{ value: 3, label: '觉得对方只是客气' }, { value: 4, label: '立刻说"没有没有，我做得不好"' }, { value: 0, label: '感谢并内心认可' }, { value: 2, label: '怀疑对方有别的目的' }] },
-  { id: 10, text: '面对新机会/挑战时，我脑海中第一句话：', type: 'CHOICE', dimension: '自我价值', options: [{ value: 4, label: '"我可能做不好"' }, { value: 0, label: '"让我试试看"' }, { value: 3, label: '"这太难了，不适合我"' }, { value: 2, label: '"万一失败了怎么办"' }] },
-  { id: 11, text: '当别人成功时，我会：', type: 'CHOICE', dimension: '自我价值', options: [{ value: 4, label: '感觉自己更失败了' }, { value: 0, label: '真诚为他们高兴并学习' }, { value: 3, label: '表面祝贺但内心不舒服' }, { value: 3, label: '觉得"他们行我也应该行"然后自责' }] },
-  // 能力信念
-  { id: 12, text: '面对不熟悉的领域，我认为：', type: 'CHOICE', dimension: '能力信念', options: [{ value: 4, label: '我学不会这么复杂的东西' }, { value: 0, label: '给我时间我可以掌握' }, { value: 4, label: '这需要天赋，我没有' }, { value: 3, label: '学习新东西对我来说太难' }] },
-  { id: 13, text: '过去尝试新技能时，我通常：', type: 'CHOICE', dimension: '能力信念', options: [{ value: 4, label: '遇到困难就觉得"我不是这块料"' }, { value: 0, label: '持续练习直到掌握' }, { value: 2, label: '跟别人比较后觉得自己太慢' }, { value: 3, label: '开始就觉得困难，很快放弃' }] },
-  { id: 14, text: '关于"10000小时定律"，我相信：', type: 'CHOICE', dimension: '能力信念', options: [{ value: 3, label: '对别人有用，对我没用' }, { value: 4, label: '练习了也没用，还是要靠天赋' }, { value: 0, label: '刻意练习确实能带来改变' }, { value: 2, label: '我坚持不了那么久' }] },
-  // 关系模式
-  { id: 15, text: '在亲密关系中，我经常：', type: 'CHOICE', dimension: '关系模式', options: [{ value: 3, label: '担心被抛弃，过度付出' }, { value: 3, label: '保持距离，不敢完全信任' }, { value: 0, label: '自然表达需求和界限' }, { value: 4, label: '觉得"我爱的人总会离开"' }] },
-  { id: 16, text: '对"求助他人"的态度：', type: 'CHOICE', dimension: '关系模式', options: [{ value: 4, label: '求助=承认自己无能' }, { value: 3, label: '很难开口，怕麻烦别人' }, { value: 0, label: '必要时会主动寻求帮助' }, { value: 3, label: '我不能依赖任何人' }] },
-  { id: 17, text: '在冲突中，我倾向于：', type: 'CHOICE', dimension: '关系模式', options: [{ value: 3, label: '立即道歉，即使不是我的错' }, { value: 2, label: '冷战，等对方先来和解' }, { value: 0, label: '平静沟通，寻找解决方案' }, { value: 4, label: '觉得"又证明了我不值得被爱"' }] },
-  // 时间与年龄
-  { id: 18, text: '关于年龄，我常想：', type: 'CHOICE', dimension: '时间与年龄', options: [{ value: 4, label: '已经XX岁了，太晚了' }, { value: 2, label: '还年轻，以后再说' }, { value: 0, label: '每个阶段都有独特机会' }, { value: 3, label: '同龄人都XXX了，我还在原地' }] },
-  { id: 19, text: '制定计划时，我通常：', type: 'CHOICE', dimension: '时间与年龄', options: [{ value: 3, label: '做超详细的计划但从不开始' }, { value: 0, label: '快速规划然后边做边调整' }, { value: 2, label: '害怕计划赶不上变化所以不做' }, { value: 1, label: '想到就做，不做计划' }] },
-  { id: 20, text: '当错过一个机会时：', type: 'CHOICE', dimension: '时间与年龄', options: [{ value: 4, label: '"我的人生完了"' }, { value: 3, label: '反复懊悔很长时间' }, { value: 0, label: '总结教训，关注下一个' }, { value: 3, label: '又一个证明"我就是倒霉"' }] },
-  // 风险与失败
-  { id: 21, text: '面对"失败"，我认为：', type: 'CHOICE', dimension: '风险与失败', options: [{ value: 4, label: '失败=我这个人是失败者' }, { value: 3, label: '失败会被所有人看不起' }, { value: 0, label: '失败是学习的一部分' }, { value: 3, label: '我承受不了失败的后果' }] },
-  { id: 22, text: '当需要走出舒适区时：', type: 'CHOICE', dimension: '风险与失败', options: [{ value: 4, label: '身体会出现不适（心慌、胃痛）' }, { value: 3, label: '找各种理由延迟' }, { value: 0, label: '有紧张但能调节' }, { value: 3, label: '直接说服自己"不适合我"' }] },
-  { id: 23, text: '做决策时，我更关注：', type: 'CHOICE', dimension: '风险与失败', options: [{ value: 4, label: '最坏情况，并因此放弃' }, { value: 3, label: '可能失去什么' }, { value: 0, label: '可能得到什么' }, { value: 2, label: '别人会怎么看我的选择' }] },
-  // 世界观
-  { id: 24, text: '我相信这个世界：', type: 'CHOICE', dimension: '世界观', options: [{ value: 4, label: '大部分是危险和恶意的' }, { value: 3, label: '机会只属于少数幸运儿' }, { value: 0, label: '充满可能性，取决于自己' }, { value: 3, label: '已经固化，普通人很难翻身' }] },
-  { id: 25, text: '关于"公平"：', type: 'CHOICE', dimension: '世界观', options: [{ value: 4, label: '世界根本不公平，努力没用' }, { value: 3, label: '有人天生就在终点线' }, { value: 0, label: '公平是相对的，专注自己能控制的' }, { value: 4, label: '我总是不公平的受害者' }] },
-  { id: 26, text: '我相信改变：', type: 'CHOICE', dimension: '世界观', options: [{ value: 4, label: '基因/原生家庭决定一切' }, { value: 3, label: '某个年龄后就定型了' }, { value: 0, label: '任何时候都可以成长' }, { value: 3, label: '对别人有用，对我没用' }] },
-  // 完美主义
-  { id: 27, text: '开始一件事前，我必须：', type: 'CHOICE', dimension: '完美主义', options: [{ value: 4, label: '等到条件完美' }, { value: 3, label: '学完所有知识再开始' }, { value: 0, label: '了解基础后就动手' }, { value: 3, label: '确保不会出错' }] },
-  { id: 28, text: '当工作完成80%时：', type: 'CHOICE', dimension: '完美主义', options: [{ value: 4, label: '花80%时间纠结最后20%' }, { value: 3, label: '反复修改，迟迟不交付' }, { value: 0, label: '评估性价比，该止损时止损' }, { value: 4, label: '觉得"还不够好"然后推倒重来' }] },
-  { id: 29, text: '我对"犯错"的恐惧：', type: 'CHOICE', dimension: '完美主义', options: [{ value: 5, label: '极度恐惧，宁愿不做' }, { value: 1, label: '担心但能接受' }, { value: 0, label: '视为学习机会' }, { value: 4, label: '一个错误就否定全部努力' }] },
-
-  // Page 4-5: Behavioral Patterns (30-47)
-  // 拖延与逃避
-  { id: 30, text: '面对重要任务，我会：', type: 'CHOICE', dimension: '拖延与逃避', options: [{ value: 3, label: '先刷手机/做不重要的事' }, { value: 0, label: '立即开始执行' }, { value: 2, label: '想太多导致迟迟不开始' }, { value: 4, label: '等到deadline前才匆忙完成' }] },
-  { id: 31, text: '过去一个月，我因拖延错过的事情有：', type: 'CHOICE', dimension: '拖延与逃避', options: [{ value: 0, label: '0-1件' }, { value: 2, label: '2-3件' }, { value: 3, label: '4-5件' }, { value: 5, label: '6件以上' }] },
-  { id: 32, text: '压力大时，我会：', type: 'CHOICE', dimension: '拖延与逃避', options: [{ value: 4, label: '刷短视频/打游戏逃避' }, { value: 0, label: '运动或找人倾诉' }, { value: 3, label: '暴饮暴食或疯狂购物' }, { value: 3, label: '睡觉或假装问题不存在' }] },
-  // 自我破坏
-  { id: 33, text: '当机会来临时，我会：', type: 'CHOICE', dimension: '自我破坏', options: [{ value: 4, label: '找证据证明"我不行"然后放弃' }, { value: 0, label: '全力以赴争取' }, { value: 4, label: '表现得不够好，印证担心' }, { value: 5, label: '自我设障（突然生病/拖延）' }] },
-  { id: 34, text: '遇到贵人/好运时：', type: 'CHOICE', dimension: '自我破坏', options: [{ value: 3, label: '怀疑，觉得"我不配"' }, { value: 4, label: '下意识破坏这个机会' }, { value: 0, label: '感恩并珍惜' }, { value: 3, label: '等着"好事之后必有坏事"' }] },
-  { id: 35, text: '我发现自己：', type: 'CHOICE', dimension: '自我破坏', options: [{ value: 5, label: '总在证明"我就是不行"' }, { value: 4, label: '总在重复相同的失败模式' }, { value: 0, label: '每次都有新收获' }, { value: 4, label: '成功后会搞砸后续' }] },
-  // 过度补偿
-  { id: 36, text: '在团队/家庭中，我经常：', type: 'CHOICE', dimension: '过度补偿', options: [{ value: 4, label: '过度照顾他人，忽略自己' }, { value: 0, label: '角色灵活，边界清晰' }, { value: 4, label: '觉得"我必须拯救所有人"' }, { value: 3, label: '总是那个被误解/被欺负的' }] },
-  { id: 37, text: '当别人拒绝我的帮助时：', type: 'CHOICE', dimension: '过度补偿', options: [{ value: 3, label: '觉得自己不被需要，很受伤' }, { value: 0, label: '尊重对方的选择' }, { value: 3, label: '生气，觉得"好心当驴肝肺"' }, { value: 4, label: '继续坚持，直到对方接受' }] },
-  { id: 38, text: '我的人际模式：', type: 'CHOICE', dimension: '过度补偿', options: [{ value: 4, label: '总是我在付出，别人不感恩' }, { value: 0, label: '互惠互利，边界清晰' }, { value: 3, label: '总有人让我失望' }, { value: 3, label: '我不得不照顾所有人' }] },
-  // 过度防御
-  { id: 39, text: '当收到批评/建议时：', type: 'CHOICE', dimension: '过度防御', options: [{ value: 3, label: '立即找理由反驳' }, { value: 4, label: '觉得对方在攻击我' }, { value: 0, label: '评估是否有道理' }, { value: 3, label: '表面接受，内心否认' }] },
-  { id: 40, text: '遇到挫折后：', type: 'CHOICE', dimension: '过度防御', options: [{ value: 4, label: '都是环境/别人的错' }, { value: 3, label: '合理化：其实我不想要' }, { value: 0, label: '反思自己的部分' }, { value: 2, label: '这说明我运气就是差' }] },
-  { id: 41, text: '对待自己的失误：', type: 'CHOICE', dimension: '过度防御', options: [{ value: 4, label: '编故事自我欺骗' }, { value: 4, label: '甩锅给运气/他人' }, { value: 0, label: '承认并寻求改进' }, { value: 3, label: '完全压抑，假装没发生' }] },
-  // 能量内耗
-  { id: 42, text: '做决定时，我会：', type: 'CHOICE', dimension: '能量内耗', options: [{ value: 4, label: '反复纠结，耗时极长' }, { value: 0, label: '快速决策，错了就调整' }, { value: 3, label: '做了决定还在后悔' }, { value: 4, label: '分析瘫痪，最后不了了之' }] },
-  { id: 43, text: '我的大脑：', type: 'CHOICE', dimension: '能量内耗', options: [{ value: 4, label: '总在反刍过去的事' }, { value: 3, label: '总在担心未来' }, { value: 0, label: '能专注在当下' }, { value: 4, label: '同时想太多，很混乱' }] },
-  { id: 44, text: '我的能量状态：', type: 'CHOICE', dimension: '能量内耗', options: [{ value: 5, label: '经常身心俱疲但没做什么实事' }, { value: 0, label: '行动后疲惫是健康的' }, { value: 4, label: '想太多做太少' }, { value: 4, label: '内心总有各种声音在争吵' }] },
-  // 完美主义行为
-  { id: 45, text: '开始后中途放弃的频率：', type: 'CHOICE', dimension: '完美主义行为', options: [{ value: 0, label: '几乎不放弃' }, { value: 1, label: '偶尔' }, { value: 4, label: '经常因为"做不到最好"而放弃' }, { value: 5, label: '大部分都半途而废' }] },
-  { id: 46, text: '看到自己的作品/成果时：', type: 'CHOICE', dimension: '完美主义行为', options: [{ value: 4, label: '只看到缺陷和不足' }, { value: 0, label: '客观评价优缺点' }, { value: 3, label: '觉得"别人能做得更好"' }, { value: 3, label: '羞于展示，怕被批评' }] },
-  { id: 47, text: '拖延后我会：', type: 'CHOICE', dimension: '完美主义行为', options: [{ value: 4, label: '严厉自责但下次还是拖延' }, { value: 3, label: '找理由合理化' }, { value: 0, label: '分析原因调整策略' }, { value: 5, label: '觉得"我就是个废物"' }] },
-
-  // Page 6: Deep Dive (48-50)
-  { id: 48, text: '如果有一个声音总在限制你，它会说什么？', type: 'OPEN' },
-  { id: 49, text: '你最想突破但最害怕的是什么？', type: 'OPEN' },
-  { id: 50, text: '如果所有限制都消失，1年后的你在做什么？', type: 'OPEN' },
+// 结果分级
+export const RESULT_LEVELS = [
+  { min: 0, max: 25, level: '能量自由型', emoji: '🌟', percent: '12%', tags: ['#人间清醒', '#松弛感天花板', '#低内耗体质'] },
+  { min: 26, max: 50, level: '轻度内耗型', emoji: '🌤️', percent: '38%', tags: ['#还算正常人', '#偶尔emo', '#可控范围内'] },
+  { min: 51, max: 75, level: '中度内耗型', emoji: '⛅', percent: '35%', tags: ['#精神内耗重灾区', '#长期疲惫', '#该重视了'] },
+  { min: 76, max: 100, level: '重度内耗型', emoji: '🌧️', percent: '15%', tags: ['#能量耗竭', '#需要帮助', '#抱抱你'] }
 ];
 
-export const MOCK_VALID_CODE = "GROW2025";
+export const QUESTIONS: Question[] = [
+  // ========== 模块1：思维内耗（10题，共28分）==========
+  {
+    id: 1,
+    text: '今晚吃什么这个世纪难题，你一般纠结多久？',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '秒选！跟着感觉走' },
+      { value: 1, label: '5-10分钟，问问室友意见' },
+      { value: 2, label: '半小时起步，最后还是随便吃' },
+      { value: 3, label: '能想一下午，纠结到错过饭点' }
+    ]
+  },
+  {
+    id: 2,
+    text: '发消息对方半小时没回，你的脑内剧场：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '可能在忙，该干嘛干嘛' },
+      { value: 1, label: '看一眼手机，继续做事' },
+      { value: 2, label: '反复确认消息内容，是不是说错话了' },
+      { value: 3, label: '已经脑补出一部8集连续剧' }
+    ]
+  },
+  {
+    id: 3,
+    text: '睡前的你最常做什么？',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '倒头就睡/刷会儿视频就困了' },
+      { value: 1, label: '想想明天的安排' },
+      { value: 2, label: '复盘今天的社交细节，越想越清醒' },
+      { value: 3, label: '从小学吵架开始反思人生' }
+    ]
+  },
+  {
+    id: 4,
+    text: '做决定的时候，你的状态是：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '快准狠，错了再说' },
+      { value: 1, label: '列个pros & cons，理性分析' },
+      { value: 2, label: '反复横跳，问遍所有朋友' },
+      { value: 3, label: '选择困难晚期，最后让别人帮我选' }
+    ]
+  },
+  {
+    id: 5,
+    text: '看到朋友圈/小红书别人的精彩生活：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '点个赞，该干嘛干嘛' },
+      { value: 1, label: '有点羡慕，但很快就忘了' },
+      { value: 2, label: '开始焦虑自己是不是太废了' },
+      { value: 3, label: '直接emo，陷入自我怀疑深渊' }
+    ]
+  },
+  {
+    id: 6,
+    text: '工作/学习时，脑子突然冒出奇怪的想法：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '几乎不会，专注力还行' },
+      { value: 1, label: '偶尔走神，能拉回来' },
+      { value: 2, label: '经常走神，效率打折' },
+      { value: 3, label: '人在自习室，心在环游世界' }
+    ]
+  },
+  {
+    id: 7,
+    text: '别人的一句"你好像变了"：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '哦？怎么变了？正常交流' },
+      { value: 1, label: '会想一下，但不会太在意' },
+      { value: 2, label: '开始疯狂回忆自己做了什么' },
+      { value: 3, label: '失眠级别的困扰，反复求证' }
+    ]
+  },
+  {
+    id: 8,
+    text: '立了flag没完成：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '没事，明天继续' },
+      { value: 1, label: '有点小愧疚，调整计划' },
+      { value: 2, label: '狠狠自责，觉得自己很失败' },
+      { value: 3, label: '破罐破摔，干脆躺平' }
+    ]
+  },
+  {
+    id: 9,
+    text: '看到热搜"30岁前必须..."这类内容：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '笑笑划走，不care' },
+      { value: 0.5, label: '看看就算，不会对号入座' },
+      { value: 1, label: '有点慌，开始对比自己' },
+      { value: 2, label: '直接破防，陷入年龄焦虑' }
+    ]
+  },
+  {
+    id: 10,
+    text: '做一件事前，你的内心OS：',
+    type: 'CHOICE',
+    dimension: '思维内耗',
+    options: [
+      { value: 0, label: '冲就完了！' },
+      { value: 0.5, label: '简单预想一下可能的情况' },
+      { value: 1, label: '预演N种尴尬场景' },
+      { value: 2, label: '光想象就已经社死100次' }
+    ]
+  },
+
+  // ========== 模块2：情绪内耗（10题，共28分）==========
+  {
+    id: 11,
+    text: '最近一周，你的情绪状态：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '整体稳定，该快乐快乐' },
+      { value: 1, label: '小波动，但恢复得快' },
+      { value: 2, label: '像坐过山车，忽上忽下' },
+      { value: 3, label: '持续低气压/麻木' }
+    ]
+  },
+  {
+    id: 12,
+    text: '突然想哭的频率：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '很少，除非真的很难过' },
+      { value: 1, label: '偶尔，看个视频会泪目' },
+      { value: 2, label: '经常，一点小事就绷不住' },
+      { value: 3, label: '已经哭不出来了/每天都在哭' }
+    ]
+  },
+  {
+    id: 13,
+    text: '你的"电量"一般能维持：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '一整天都很有活力' },
+      { value: 1, label: '下午开始有点累' },
+      { value: 2, label: '刚起床就想下班/放学' },
+      { value: 3, label: '长期低电量，靠咖啡续命' }
+    ]
+  },
+  {
+    id: 14,
+    text: '面对他人的情绪垃圾：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '能安慰但不会带入自己' },
+      { value: 1, label: '短暂受影响，睡一觉就好' },
+      { value: 2, label: '像海绵一样吸收，很难排解' },
+      { value: 3, label: '已经被压垮，自己都自顾不暇' }
+    ]
+  },
+  {
+    id: 15,
+    text: '社交后的状态：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '充电完成！好开心' },
+      { value: 1, label: '看情况，有时累有时爽' },
+      { value: 2, label: '需要独处三天恢复' },
+      { value: 3, label: '每次社交都像渡劫' }
+    ]
+  },
+  {
+    id: 16,
+    text: '对于"摆烂"这件事：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '偶尔放松，不觉得有问题' },
+      { value: 1, label: '摆烂后会有点罪恶感' },
+      { value: 2, label: '一边摆烂一边狠狠自责' },
+      { value: 3, label: '已经摆麻了但依然焦虑' }
+    ]
+  },
+  {
+    id: 17,
+    text: '你的快乐阈值：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '很容易快乐，小确幸就能开心' },
+      { value: 1, label: '正常水平，该乐就乐' },
+      { value: 2, label: '越来越难快乐起来' },
+      { value: 3, label: '已经不记得快乐是什么感觉' }
+    ]
+  },
+  {
+    id: 18,
+    text: '半夜刷手机的原因：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '单纯不想睡/在看有趣的内容' },
+      { value: 1, label: '有点焦虑，需要分散注意力' },
+      { value: 2, label: '越刷越空虚，但停不下来' },
+      { value: 3, label: '不敢面对关机后的自己' }
+    ]
+  },
+  {
+    id: 19,
+    text: '对于"还行""无所谓"这类词：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '偶尔使用，真的没啥感觉' },
+      { value: 0.5, label: '有时候懒得解释就这么说' },
+      { value: 1, label: '高频使用，不知道怎么表达了' },
+      { value: 2, label: '口头禅，已经情绪钝化' }
+    ]
+  },
+  {
+    id: 20,
+    text: '你的崩溃周期：',
+    type: 'CHOICE',
+    dimension: '情绪内耗',
+    options: [
+      { value: 0, label: '很少崩溃，心态稳' },
+      { value: 0.5, label: '几个月一次，有明确原因' },
+      { value: 1, label: '一个月好几次小崩溃' },
+      { value: 2, label: '随时随地，一个眼神就能破防' }
+    ]
+  },
+
+  // ========== 模块3：行动内耗（8题，共24分）==========
+  {
+    id: 21,
+    text: '你的待办清单现状：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '基本都能完成，有条不紊' },
+      { value: 1, label: '完成70-80%，可以接受' },
+      { value: 2, label: '永远在拖延，永远在补救' },
+      { value: 3, label: '已经不敢列清单了' }
+    ]
+  },
+  {
+    id: 22,
+    text: '早上起床的状态：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '闹钟一响就起，开启新的一天' },
+      { value: 1, label: '赖床10分钟，但不会迟到' },
+      { value: 2, label: '需要定7-8个闹钟，起床困难户' },
+      { value: 3, label: '每天都在生死边缘挣扎' }
+    ]
+  },
+  {
+    id: 23,
+    text: '想学个新技能/开始健身：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '说干就干，行动力max' },
+      { value: 1, label: '准备一下，很快能开始' },
+      { value: 2, label: '收藏夹吃灰，攻略看了800遍没动手' },
+      { value: 3, label: '光想想就累了，算了' }
+    ]
+  },
+  {
+    id: 24,
+    text: '你的房间/工位状态：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '整洁有序，定期收拾' },
+      { value: 1, label: '有点乱但能接受' },
+      { value: 2, label: '乱到自己都看不下去但懒得收' },
+      { value: 3, label: '灾难现场，已经放弃治疗' }
+    ]
+  },
+  {
+    id: 25,
+    text: '约朋友见面：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '积极响应，准时赴约' },
+      { value: 1, label: '看心情和对象' },
+      { value: 2, label: '答应了但出门前各种纠结' },
+      { value: 3, label: '能推就推，不想出门' }
+    ]
+  },
+  {
+    id: 26,
+    text: '面对deadline：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '提前完成，留有余地' },
+      { value: 1, label: '按时完成，不拖拉' },
+      { value: 2, label: '压线冲刺型选手' },
+      { value: 3, label: '不到最后一秒不动手' }
+    ]
+  },
+  {
+    id: 27,
+    text: '买了网课/办了健身卡：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '物尽其用，好好学/练' },
+      { value: 1, label: '至少用了一半' },
+      { value: 2, label: '用了不到1/3，在吃灰' },
+      { value: 3, label: '买了=学了，充值信仰' }
+    ]
+  },
+  {
+    id: 28,
+    text: '想做的事情vs实际在做的事：',
+    type: 'CHOICE',
+    dimension: '行动内耗',
+    options: [
+      { value: 0, label: '基本一致，执行力不错' },
+      { value: 1, label: '有些偏差但还好' },
+      { value: 2, label: '完全相反，人在床上心在远方' },
+      { value: 3, label: '已经不敢想了，想了更难受' }
+    ]
+  },
+
+  // ========== 模块4：关系内耗（7题，共20分）==========
+  {
+    id: 29,
+    text: '在群聊里：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '积极互动，该说就说' },
+      { value: 1, label: '看到感兴趣的会聊几句' },
+      { value: 2, label: '打字删除打字删除，最后不发了' },
+      { value: 3, label: '潜水专业户，生怕说错话' }
+    ]
+  },
+  {
+    id: 30,
+    text: '别人找你帮忙：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '能帮就帮，不能就拒绝' },
+      { value: 1, label: '稍微考虑一下，给出答复' },
+      { value: 2, label: '很难拒绝，硬着头皮答应' },
+      { value: 3, label: '已经帮到自己很累还不敢说' }
+    ]
+  },
+  {
+    id: 31,
+    text: '维持一段关系你觉得：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '自然而然，不费力' },
+      { value: 1, label: '需要经营但还好' },
+      { value: 2, label: '很累，总在察言观色' },
+      { value: 3, label: '精疲力尽，想逃离社交' }
+    ]
+  },
+  {
+    id: 32,
+    text: '发朋友圈/发微博：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '想发就发，不在意别人看法' },
+      { value: 1, label: '稍微注意一下措辞' },
+      { value: 2, label: '反复修改，精心设计可见范围' },
+      { value: 3, label: '已经不敢发了/发完秒删' }
+    ]
+  },
+  {
+    id: 33,
+    text: '在关系中的位置感：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '挺清晰的，知道谁是真朋友' },
+      { value: 1, label: '大部分时候清楚' },
+      { value: 2, label: '经常不确定，患得患失' },
+      { value: 3, label: '完全迷失，觉得自己可有可无' }
+    ]
+  },
+  {
+    id: 34,
+    text: '看到别人"在线"但不回你消息：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '没啥感觉，可能在忙别的' },
+      { value: 0.5, label: '有点在意但能理解' },
+      { value: 1, label: '开始脑补各种被忽视的原因' },
+      { value: 2, label: '直接emo，觉得不被重视' }
+    ]
+  },
+  {
+    id: 35,
+    text: '你对"讨好型人格"的共鸣度：',
+    type: 'CHOICE',
+    dimension: '关系内耗',
+    options: [
+      { value: 0, label: '完全不懂，我挺自我的' },
+      { value: 0.5, label: '偶尔会，但不严重' },
+      { value: 1, label: '中枪了，经常委屈自己' },
+      { value: 2, label: '完全就是我，为别人活着' }
+    ]
+  },
+
+  // ========== 开放题部分（3题）==========
+  {
+    id: 36,
+    text: '最近一次"精神内耗"到崩溃是什么时候？当时在纠结/担心什么？',
+    type: 'OPEN',
+    placeholder: '比如"凌晨3点还在想白天开会时说的一句话是不是冒犯了同事"'
+  },
+  {
+    id: 37,
+    text: '如果能给此刻的自己放个假，你最想做什么？为什么？',
+    type: 'OPEN',
+    placeholder: '是想一个人发呆，还是和朋友疯玩，或是做点一直想做但没做的事？'
+  },
+  {
+    id: 38,
+    text: '用三个词形容现在的生活状态，然后说说你理想中的状态是什么样的？',
+    type: 'OPEN',
+    placeholder: '比如"焦虑、疲惫、麻木"vs"松弛、有趣、掌控感"'
+  }
+];
+
+// 兼容旧代码的导出
+export const BELIEF_DIMENSIONS = OVERTHINKING_DIMENSIONS;
+export const BEHAVIOR_PATTERNS = {};
+
+export const MOCK_VALID_CODE = "NEIHO2025";

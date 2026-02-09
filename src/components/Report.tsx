@@ -1,11 +1,13 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, LabelList } from 'recharts';
 import { ReportData } from '../types';
 import { parse } from 'marked';
 import DOMPurify from 'dompurify';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { ShareModal, FeedbackModal } from './ShareModal';
+import { RESULT_LEVELS } from '../constants';
 
 interface Props {
   data: ReportData;
@@ -20,6 +22,8 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [openSection, setOpenSection] = useState<number | null>(0);
   const [renderedMarkdown, setRenderedMarkdown] = useState<string>('');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when streaming
@@ -65,12 +69,15 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
     fullMark: 5,
   }));
 
-  const barData = Object.entries(data.scores.patternScores).map(([name, value]) => ({
+  // 将维度分数转换为分数制（乘以10），用于条形图显示
+  const barData = Object.entries(data.scores.beliefScores).map(([name, value]) => ({
     name,
-    value: Number((value as number).toFixed(2)),
+    value: Math.round(Number(value) * 10), // 转换为分数
+    percent: Math.round(Number(value) * 20), // 内耗程度百分比 (5分制 -> 100%)
   }));
 
-  const COLORS = ['#4f46e5', '#7c3aed', '#db2777', '#dc2626', '#d97706', '#059669'];
+  // 内耗主题配色
+  const COLORS = ['#f97316', '#fb923c', '#ec4899', '#f43f5e', '#a855f7', '#6366f1'];
 
   const Section = ({ title, icon, children, index }: { title: string, icon: React.ReactNode, children?: React.ReactNode, index: number }) => (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden mb-6 transition-all">
@@ -79,7 +86,7 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
         className="w-full px-8 py-6 flex items-center justify-between group"
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 duration-300">
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-50 to-rose-50 text-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 duration-300">
             {icon}
           </div>
           <h3 className="text-xl font-black text-slate-800 tracking-tight">{title}</h3>
@@ -97,13 +104,30 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
   );
 
   const handleShare = () => {
-    if (!assessmentId) {
-      alert('报告尚未生成完成');
-      return;
-    }
-    const reportUrl = `${window.location.origin}/report/${assessmentId}`;
-    navigator.clipboard.writeText(reportUrl);
-    alert('报告链接已复制，快去分享给朋友吧！');
+    setShowShareModal(true);
+  };
+
+  // 获取当前等级信息
+  const getLevelInfo = () => {
+    const score = data.scores.overallIndex * 10; // 转换为百分制
+    const levelInfo = RESULT_LEVELS.find(l => score >= l.min && score <= l.max);
+    return levelInfo || RESULT_LEVELS[1];
+  };
+
+  const levelInfo = getLevelInfo();
+
+  // 获取最高内耗维度
+  const getTopDimension = () => {
+    const scores = data.scores.beliefScores;
+    let maxKey = '';
+    let maxVal = 0;
+    Object.entries(scores).forEach(([key, val]) => {
+      if (val > maxVal) {
+        maxVal = val;
+        maxKey = key;
+      }
+    });
+    return maxKey || data.scores.coreBarrier;
   };
 
   const [downloadingPDF, setDownloadingPDF] = useState(false);
@@ -174,7 +198,7 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
         }
 
         // Download PDF
-        pdf.save(`成长阻碍报告-${assessmentId.slice(0, 8)}.pdf`);
+        pdf.save(`内耗指数报告-${assessmentId.slice(0, 8)}.pdf`);
 
         // Cleanup
         document.body.removeChild(container);
@@ -195,32 +219,43 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
   return (
     <div className="max-w-4xl mx-auto pb-24 space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
       {/* 顶部指标 */}
-      <section className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-700 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+      <section className="bg-gradient-to-br from-orange-500 via-rose-500 to-pink-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl shadow-orange-200 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
             <div>
-              <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 backdrop-blur-sm">
-                成长观察员深度报告 • 绝密
+              <span className="inline-block px-4 py-1.5 bg-white/20 rounded-full text-[11px] font-bold uppercase tracking-widest mb-4 backdrop-blur-sm">
+                🧠 内耗指数深度分析报告
               </span>
-              <h2 className="text-4xl font-black tracking-tight mb-2">成长阻碍深度探测报告</h2>
-              <p className="text-white/60 text-sm font-medium">探测编码: {assessmentId || '正在建立'}</p>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-2">你的能量都去哪儿了？</h2>
+              <p className="text-white/70 text-sm font-medium">报告编号: {assessmentId?.slice(0, 8) || '生成中...'}</p>
             </div>
             <div className="text-right">
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest">阻碍指数 (O.I)</span>
-              <p className="text-6xl font-black tabular-nums">{data.scores.overallIndex}<span className="text-xl opacity-30 ml-1">/10</span></p>
+              <span className="text-xs font-bold text-white/60 uppercase tracking-widest">内耗指数</span>
+              <p className="text-6xl font-black tabular-nums">{Math.round(data.scores.overallIndex * 10)}<span className="text-2xl opacity-50 ml-1">分</span></p>
             </div>
           </div>
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="bg-black/10 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-inner">
-              <div className="mb-6">
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">状态评估</span>
-                <p className="text-2xl font-black text-yellow-300 mt-1">{data.scores.level}</p>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 border border-white/20">
+              <div className="mb-5">
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">内耗等级</span>
+                <p className="text-2xl font-black mt-1 flex items-center gap-2">
+                  <span className="text-3xl">{levelInfo.emoji}</span>
+                  {levelInfo.level}
+                </p>
               </div>
               <div>
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">核心心智卡点</span>
-                <p className="text-2xl font-black mt-1">{data.scores.coreBarrier}</p>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">最大能量黑洞</span>
+                <p className="text-xl font-black mt-1">{data.scores.coreBarrier}</p>
               </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {levelInfo.tags.map((tag, i) => (
+                <span key={i} className="px-3 py-1.5 bg-white/10 backdrop-blur rounded-full text-xs font-bold">
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -228,25 +263,34 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
 
       {/* 维度分析 */}
       <div className="space-y-4">
-        <Section index={0} title="心智图谱：内心声量的量化" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>}>
+        <Section index={0} title="内耗雷达图：四维能量分布" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="h-[320px] bg-slate-50/50 rounded-3xl p-4">
+            <div className="h-[320px] bg-gradient-to-br from-orange-50/50 to-rose-50/50 rounded-3xl p-4">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} axisLine={false} />
-                  <Radar name="得分" dataKey="A" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.6} isAnimationActive={false} />
+                  <PolarGrid stroke="#fed7aa" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fontWeight: 700, fill: '#9a3412' }} axisLine={false} />
+                  <Radar name="内耗程度" dataKey="A" stroke="#f97316" fill="#f97316" fillOpacity={0.5} isAnimationActive={false} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
-            <div className="h-[320px] bg-slate-50/50 rounded-3xl p-4">
+            <div className="h-[320px] bg-gradient-to-br from-orange-50/50 to-rose-50/50 rounded-3xl p-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData} layout="vertical" margin={{ left: 20, right: 20 }}>
-                  <XAxis type="number" domain={[0, 5]} hide />
-                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                  <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={16} isAnimationActive={false}>
+                <BarChart data={barData} layout="vertical" margin={{ left: 20, right: 80 }}>
+                  <XAxis type="number" domain={[0, 50]} hide />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11, fontWeight: 700, fill: '#9a3412' }} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} formatter={(value: number, name: string, props: any) => [`${value}分 (${props.payload.percent}%)`, '内耗程度']} />
+                  <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={24} isAnimationActive={false}>
                     {barData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                    <LabelList dataKey="value" position="right" content={(props: any) => {
+                      const { x, y, width, value, index } = props;
+                      const percent = barData[index]?.percent || 0;
+                      return (
+                        <text x={x + width + 8} y={y + 12} fill="#9a3412" fontSize={11} fontWeight={700}>
+                          {value}分 ({percent}%)
+                        </text>
+                      );
+                    }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -255,17 +299,17 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
         </Section>
 
         {/* AI 深度分析区 */}
-        <section className="bg-gradient-to-br from-white via-indigo-50/20 to-slate-50 rounded-[3rem] p-10 md:p-16 border border-indigo-100 shadow-2xl shadow-indigo-100 relative overflow-hidden">
+        <section className="bg-gradient-to-br from-white via-orange-50/30 to-rose-50/30 rounded-[3rem] p-10 md:p-16 border border-orange-100 shadow-2xl shadow-orange-100/50 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-5">
-            <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01705C7.91248 16 7.01705 16.8954 7.01705 18V21H4.01705V18C4.01705 15.2386 6.25562 13 9.01705 13H12.017C14.7785 13 17.017 15.2386 17.017 18V21H14.017ZM12.017 11C14.2262 11 16.0171 9.20914 16.0171 7C16.0171 4.79086 14.2262 3 12.0171 3C9.80791 3 8.01705 4.79086 8.01705 7C8.01705 9.20914 9.80791 11 12.017 11Z" /></svg>
+            <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
           </div>
 
-          <h3 className="text-3xl font-black mb-12 flex items-center gap-4 text-slate-900 tracking-tight">
-            成长观察员：生命脚本洞察
+          <h3 className="text-2xl md:text-3xl font-black mb-10 flex items-center gap-4 text-slate-900 tracking-tight">
+            🔍 AI 深度分析：找出你的能量黑洞
             {isStreaming && (
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                实时生成中
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-bold">
+                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                生成中
               </span>
             )}
           </h3>
@@ -276,30 +320,49 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
                 dangerouslySetInnerHTML={{ __html: renderedMarkdown }}
               />
               {isStreaming && (
-                <div className="mt-4 flex items-center gap-2 text-indigo-500">
-                  <span className="inline-block w-2 h-4 bg-indigo-500 animate-pulse"></span>
+                <div className="mt-4 flex items-center gap-2 text-orange-500">
+                  <span className="inline-block w-2 h-4 bg-orange-500 animate-pulse"></span>
                   <span className="text-sm font-medium">正在输入...</span>
                 </div>
               )}
             </div>
           ) : showLoading ? (
-            <div className="text-center py-32 space-y-12">
-              <div className="relative w-48 h-48 mx-auto">
-                <div className="absolute inset-0 border-[16px] border-indigo-100/50 rounded-full"></div>
-                <div className="absolute inset-0 border-[16px] border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+            <div className="text-center py-24 space-y-10">
+              <div className="relative w-40 h-40 mx-auto">
+                <div className="absolute inset-0 border-[12px] border-orange-100 rounded-full"></div>
+                <div className="absolute inset-0 border-[12px] border-orange-500 rounded-full border-t-transparent animate-spin"></div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-black text-indigo-600 tabular-nums">{Math.floor(loadingProgress)}%</span>
-                  <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-2">Writing Deep Analysis</span>
+                  <span className="text-4xl font-black text-orange-600 tabular-nums">{Math.floor(loadingProgress)}%</span>
                 </div>
               </div>
               <div className="space-y-4">
-                <h4 className="text-2xl font-black text-slate-800 tracking-tight">正在撰写约 6000 字的生命脚本分析...</h4>
-                <p className="text-slate-400 font-medium max-w-md mx-auto">成长观察员正在穿透表象，解析潜意识深处那些习以为常的行为惯性。这个过程通常需要 1-2 分钟。</p>
+                <h4 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">AI 正在分析你的内耗模式...</h4>
+                <p className="text-slate-400 font-medium max-w-md mx-auto">正在生成约 3000 字的个性化深度分析报告，预计需要 30-60 秒</p>
               </div>
             </div>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-slate-400">等待 AI 分析...</p>
+            <div className="text-center py-16 space-y-8">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-orange-100 to-rose-100 rounded-3xl flex items-center justify-center">
+                <svg className="w-12 h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="space-y-3">
+                <h4 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">基础报告已生成</h4>
+                <p className="text-slate-400 font-medium max-w-md mx-auto">
+                  点击下方按钮，AI 将为你生成约 3000 字的个性化深度分析报告
+                </p>
+              </div>
+              <button
+                onClick={onRefreshAI}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-black text-lg rounded-2xl shadow-xl shadow-orange-200 hover:shadow-2xl hover:shadow-orange-300 transition-all active:scale-[0.98]"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                开始 AI 深度分析
+              </button>
+              <p className="text-xs text-slate-300 font-medium">预计需要 30-60 秒</p>
             </div>
           )}
 
@@ -310,9 +373,9 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
                 <span>生成进度</span>
                 <span>{Math.floor(loadingProgress)}% · 约 {streamingContent?.length || 0} 字</span>
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-orange-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-orange-500 to-rose-500 transition-all duration-300"
                   style={{ width: `${loadingProgress}%` }}
                 ></div>
               </div>
@@ -320,19 +383,19 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
           )}
         </section>
 
-        {/* 成长路径 */}
-        <Section index={1} title="成长路径：重塑与破局" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>}>
+        {/* 能量恢复路径 */}
+        <Section index={1} title="能量恢复：21天行动计划" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>}>
           <div className="space-y-12">
             <div>
               <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
-                立即开启：24小时行动建议
+                <span className="w-1.5 h-6 bg-gradient-to-b from-orange-500 to-rose-500 rounded-full"></span>
+                立即行动：今天就能做的 3 件事
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {data.immediateActions.map((action, i) => (
-                  <div key={i} className="p-8 bg-indigo-50/40 rounded-[2rem] border border-indigo-100">
-                    <div className="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black mb-6 shadow-lg shadow-indigo-100">{i + 1}</div>
-                    <p className="text-slate-800 font-bold leading-relaxed">{action.replace(/[#*]/g, '')}</p>
+                  <div key={i} className="p-6 bg-gradient-to-br from-orange-50 to-rose-50 rounded-[1.5rem] border border-orange-100">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-rose-500 text-white rounded-xl flex items-center justify-center font-black mb-4 shadow-lg shadow-orange-200">{i + 1}</div>
+                    <p className="text-slate-700 font-bold leading-relaxed">{action.replace(/[#*]/g, '')}</p>
                   </div>
                 ))}
               </div>
@@ -340,19 +403,19 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
 
             <div>
               <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-purple-600 rounded-full"></span>
-                重塑生命：21天行动图谱
+                <span className="w-1.5 h-6 bg-gradient-to-b from-orange-500 to-rose-500 rounded-full"></span>
+                21天能量恢复计划
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.entries(data.plan21Days).map(([week, tasks], idx) => (
-                  <div key={week} className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100">
-                    <div className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-4">
-                      {week === 'week1' ? '第 1 阶段：意识觉醒' : week === 'week2' ? '第 2 阶段：行为替换' : '第 3 阶段：巩固内化'}
+                  <div key={week} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                    <div className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4">
+                      {week === 'week1' ? '第 1 周：觉察内耗' : week === 'week2' ? '第 2 周：打断循环' : '第 3 周：建立新模式'}
                     </div>
-                    <ul className="space-y-4">
+                    <ul className="space-y-3">
                       {(tasks as string[]).map((task, i) => (
                         <li key={i} className="flex gap-3 text-sm font-medium text-slate-600 leading-relaxed">
-                          <span className="shrink-0 w-5 h-5 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-400">{i + 1}</span>
+                          <span className="shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600">{i + 1}</span>
                           {task}
                         </li>
                       ))}
@@ -366,9 +429,9 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
       </div>
 
       {/* 底部操作区 */}
-      <div className="pt-16 border-t border-slate-100 flex flex-col items-center gap-12 print:hidden">
+      <div className="pt-16 border-t border-slate-100 flex flex-col items-center gap-10 print:hidden">
         <div className="flex flex-col md:flex-row gap-4 w-full max-w-xl">
-          <button onClick={handleDownloadPDF} disabled={downloadingPDF} className="flex-1 bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all disabled:opacity-50">
+          <button onClick={handleDownloadPDF} disabled={downloadingPDF} className="flex-1 bg-slate-900 text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:bg-black transition-all disabled:opacity-50">
             {downloadingPDF ? (
               <>
                 <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
@@ -377,18 +440,56 @@ const Report: React.FC<Props> = ({ data, assessmentId, onRefreshAI, onMeToo, str
                 </svg>
                 生成中...
               </>
-            ) : '下载报告'}
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                下载报告
+              </>
+            )}
           </button>
-          <button onClick={handleShare} className="flex-1 bg-white text-indigo-600 py-6 rounded-[2.5rem] font-black text-lg flex items-center justify-center gap-3 border border-slate-100 shadow-xl hover:bg-indigo-50 transition-all">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-            分享报告
+          <button onClick={handleShare} className="flex-1 bg-gradient-to-r from-orange-500 to-rose-500 text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-orange-200 hover:shadow-2xl hover:shadow-orange-300 transition-all">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            分享给朋友
           </button>
         </div>
+
+        {/* 反馈按钮 */}
+        <button
+          onClick={() => setShowFeedbackModal(true)}
+          className="flex items-center gap-2 text-slate-400 hover:text-orange-600 transition-colors text-sm font-bold"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          报告准确吗？给我们反馈
+        </button>
+
         <button onClick={onMeToo} className="flex flex-col items-center gap-4 group">
-          <span className="text-slate-400 text-xs font-black tracking-widest uppercase">开启下一轮探测</span>
-          <div className="w-16 h-16 rounded-full bg-indigo-600 shadow-2xl flex items-center justify-center text-white text-3xl font-black group-hover:scale-110 transition-transform">+</div>
+          <span className="text-slate-400 text-xs font-black tracking-widest uppercase">再测一次</span>
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 shadow-xl shadow-orange-200 flex items-center justify-center text-white text-2xl font-black group-hover:scale-110 transition-transform">+</div>
         </button>
       </div>
+
+      {/* 分享弹窗 */}
+      <ShareModal
+        show={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        reportData={{
+          totalScore: Math.round(data.scores.overallIndex * 10),
+          level: levelInfo.level,
+          levelEmoji: levelInfo.emoji,
+          topDimension: getTopDimension(),
+          assessmentId,
+          dimensionScores: data.scores.beliefScores,
+        }}
+      />
+
+      {/* 反馈弹窗 */}
+      <FeedbackModal
+        show={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        assessmentId={assessmentId}
+      />
     </div>
   );
 };

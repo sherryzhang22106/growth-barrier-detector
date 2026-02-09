@@ -2,8 +2,14 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'fallback-secret-change-in-production';
-const JWT_EXPIRY = parseInt(process.env.JWT_EXPIRY_HOURS || '24', 10);
+// 动态获取 JWT 配置（解决 ES 模块加载顺序问题）
+function getJwtSecret(): string | undefined {
+  return process.env.ADMIN_JWT_SECRET;
+}
+
+function getJwtExpiry(): number {
+  return parseInt(process.env.JWT_EXPIRY_HOURS || '24', 10);
+}
 
 export interface AdminPayload {
   username: string;
@@ -12,16 +18,25 @@ export interface AdminPayload {
 }
 
 export function generateToken(username: string): string {
+  const secret = getJwtSecret();
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT secret not configured or too short (min 32 chars)');
+  }
   return jwt.sign(
     { username },
-    JWT_SECRET,
-    { expiresIn: `${JWT_EXPIRY}h` }
+    secret,
+    { expiresIn: `${getJwtExpiry()}h` }
   );
 }
 
 export function verifyToken(token: string): AdminPayload | null {
+  const secret = getJwtSecret();
+  if (!secret) {
+    console.error('JWT secret not configured');
+    return null;
+  }
   try {
-    return jwt.verify(token, JWT_SECRET) as AdminPayload;
+    return jwt.verify(token, secret) as AdminPayload;
   } catch {
     return null;
   }

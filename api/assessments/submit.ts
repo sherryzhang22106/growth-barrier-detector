@@ -36,8 +36,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       data: {
         visitorId: sanitizedVisitorId,
         code: sanitizedCode,
-        responses: sanitizedResponses,
-        scores: scores,
+        responses: JSON.stringify(sanitizedResponses),
+        scores: JSON.stringify(scores),
         aiStatus: 'pending',
       },
     });

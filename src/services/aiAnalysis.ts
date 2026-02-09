@@ -7,10 +7,10 @@ import { QUESTIONS } from '../constants';
 function formatHighScoreQuestions(detailedResponses: Record<number, any>) {
   let output = '';
   for (const [qId, data] of Object.entries(detailedResponses)) {
-    if (data.score >= 3) {
+    if (data.score >= 2) {
       output += `\nQ${qId}: ${data.question}\n`;
       output += `你的选择：${data.text}\n`;
-      output += `得分：${data.score}/4\n`;
+      output += `得分：${data.score}/3\n`;
     }
   }
   return output || "暂无显著高分项";
@@ -43,7 +43,7 @@ export function formatUserDataForAI(responses: AssessmentResponse, scores: Score
 
   const allDetailed: Record<number, any> = {};
   QUESTIONS.forEach(q => {
-    if (responses[q.id] !== undefined) {
+    if (responses[q.id] !== undefined && q.type === 'CHOICE') {
       allDetailed[q.id] = {
         question: q.text,
         text: getAnswerText(q.id),
@@ -52,36 +52,20 @@ export function formatUserDataForAI(responses: AssessmentResponse, scores: Score
     }
   });
 
-  const beliefEntries = Object.entries(scores.beliefScores).sort((a, b) => b[1] - a[1]);
-  const secondaryBelief = beliefEntries.length > 1 ? beliefEntries[1][0] : "无";
-
-  const behaviorEntries = Object.entries(scores.patternScores).sort((a, b) => b[1] - a[1]);
-  const keyBehavior = behaviorEntries.length > 0 ? behaviorEntries[0][0] : "无";
-
   return {
-    basic_info: {
-      age_group: getAnswerText(1),
-      focus_areas: [getAnswerText(2)],
-      stuck_duration: getAnswerText(3),
-      change_expectation: getAnswerText(4),
-      life_satisfaction: responses[5]
-    },
     scores: {
-      obstacle_index: scores.overallIndex,
+      totalScore: scores.totalScore,
       level: scores.level,
-      dimensions: scores.beliefScores,
-      behaviors: scores.patternScores
-    },
-    core_issues: {
-      primary_belief: scores.coreBarrier,
-      primary_score: Math.round((scores.beliefScores[scores.coreBarrier] || 0) / 5 * 12),
-      secondary_belief: secondaryBelief,
-      key_behavior: keyBehavior
+      levelInfo: scores.levelInfo,
+      beatPercent: scores.beatPercent,
+      topDimension: scores.topDimension,
+      dimensionScores: scores.dimensionScores,
+      dimensionPercentages: scores.dimensionPercentages
     },
     open_responses: {
-      q48_limiting_voice: responses[48] || "我必须完美，否则就不安全",
-      q49_fear: responses[49] || "害怕努力后依然失败，证明我彻底无能",
-      q50_ideal_future: responses[50] || "内心自由，充满力量地创造生活"
+      q36_breakdown: responses[36] || "未填写",
+      q37_vacation: responses[37] || "未填写",
+      q38_status: responses[38] || "未填写"
     },
     detailed_responses: allDetailed,
     high_score_summary: formatHighScoreQuestions(allDetailed)

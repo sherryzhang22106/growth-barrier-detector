@@ -16,6 +16,17 @@ const PROMPT_INJECTION_PATTERNS = [
   /on\w+\s*=/i,
 ];
 
+// 敏感词列表（基础版，可根据需要扩展）
+const SENSITIVE_WORDS = [
+  // 政治敏感
+  /习近平/gi, /共产党/gi, /六四/gi, /天安门/gi, /法轮功/gi,
+  // 暴力相关
+  /自杀方法/gi, /如何自杀/gi, /杀人方法/gi,
+  // 色情相关
+  /色情/gi, /裸体/gi,
+  // 可根据需要添加更多
+];
+
 // HTML entities to escape
 const HTML_ENTITIES: Record<string, string> = {
   '&': '&amp;',
@@ -41,8 +52,27 @@ export function containsPromptInjection(text: string): boolean {
 }
 
 /**
+ * Check if text contains sensitive words
+ */
+export function containsSensitiveWords(text: string): boolean {
+  return SENSITIVE_WORDS.some(pattern => pattern.test(text));
+}
+
+/**
+ * Filter sensitive words from text
+ */
+export function filterSensitiveWords(text: string): string {
+  let filtered = text;
+  SENSITIVE_WORDS.forEach(pattern => {
+    filtered = filtered.replace(pattern, '***');
+  });
+  return filtered;
+}
+
+/**
  * Sanitize text for AI prompt usage
  * - Removes potential injection patterns
+ * - Filters sensitive words
  * - Limits length
  * - Escapes special characters
  */
@@ -61,6 +91,9 @@ export function sanitizeForAI(text: string, maxLength: number = 500): string {
   if (containsPromptInjection(sanitized)) {
     return '[内容已过滤]';
   }
+
+  // Filter sensitive words
+  sanitized = filterSensitiveWords(sanitized);
 
   return sanitized;
 }
@@ -122,6 +155,8 @@ export function sanitizeResponses(responses: Record<string, any>): Record<string
 export default {
   escapeHtml,
   containsPromptInjection,
+  containsSensitiveWords,
+  filterSensitiveWords,
   sanitizeForAI,
   sanitizeInput,
   sanitizeCode,

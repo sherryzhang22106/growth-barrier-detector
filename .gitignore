@@ -41,3 +41,4 @@ prisma/migrations/
 # Misc
 *.pem
 *.key
+.env*.local

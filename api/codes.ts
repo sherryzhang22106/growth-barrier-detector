@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import prisma from './lib/db';
 import { withAuth } from './lib/auth';
 import { sanitizeCode } from './lib/sanitize';
+import { rateLimiters, getClientIP } from './lib/rateLimit';
+import { applyCors, handleCorsPreflightRequest } from './lib/cors';
 import crypto from 'crypto';
 
 function generateCode(prefix: string = 'GROW'): string {
@@ -196,6 +198,23 @@ async function deleteAllUnused(req: VercelRequest, res: VercelResponse) {
 
 // Validate code (public)
 async function validateCode(req: VercelRequest, res: VercelResponse) {
+  // 暴力破解防护：限制验证尝试次数
+  const clientIP = getClientIP(req);
+  const rateLimit = rateLimiters.codeValidation(clientIP);
+
+  if (!rateLimit.success) {
+    const message = rateLimit.blocked
+      ? `验证尝试次数过多，请 ${rateLimit.retryAfter} 秒后再试`
+      : `请求过于频繁，请 ${rateLimit.retryAfter} 秒后再试`;
+
+    return res.status(429).json({
+      success: false,
+      message,
+      retryAfter: rateLimit.retryAfter,
+      blocked: rateLimit.blocked,
+    });
+  }
+
   const { code, visitorId } = req.body;
 
   if (!code) {
@@ -205,6 +224,11 @@ async function validateCode(req: VercelRequest, res: VercelResponse) {
   const sanitizedCode = sanitizeCode(code);
 
   if (!sanitizedCode) {
+    return res.status(400).json({ success: false, message: '兑换码格式无效' });
+  }
+
+  // 增强格式校验：必须是 4-20 位字母数字
+  if (!/^[A-Z0-9]{4,20}$/.test(sanitizedCode)) {
     return res.status(400).json({ success: false, message: '兑换码格式无效' });
   }
 
@@ -218,6 +242,10 @@ async function validateCode(req: VercelRequest, res: VercelResponse) {
 
   if (redemptionCode.status === 'USED') {
     return res.status(400).json({ success: false, message: '该兑换码已被使用' });
+  }
+
+  if (redemptionCode.status === 'ACTIVATED') {
+    return res.status(400).json({ success: false, message: '该兑换码已被激活，正在使用中' });
   }
 
   if (redemptionCode.status === 'REVOKED') {
@@ -249,6 +277,14 @@ async function validateCode(req: VercelRequest, res: VercelResponse) {
 
 // Main handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle CORS preflight
+  if (handleCorsPreflightRequest(req, res)) {
+    return;
+  }
+
+  // Apply CORS headers
+  applyCors(req, res);
+
   const { action } = req.query;
 
   try {

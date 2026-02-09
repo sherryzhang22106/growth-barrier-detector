@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Local env files
+.env.local
+.env.development
+
+# Database files
+prisma/prisma
+*.db
+*.db-journal
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test files
+coverage
+*.test.ts
+*.spec.ts
+
+# Documentation
+*.md
+!README.md
+
+# Deployment scripts (not needed in container)
+deploy.sh
+DEPLOY.md

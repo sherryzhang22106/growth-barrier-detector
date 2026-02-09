@@ -25,7 +25,7 @@ const Toast: React.FC<ToastProps> = ({ message, type = 'info', duration = 3000, 
     success: 'bg-emerald-600',
     error: 'bg-red-600',
     warning: 'bg-amber-600',
-    info: 'bg-indigo-600',
+    info: 'bg-orange-500',
   };
 
   const icons: Record<ToastType, React.ReactNode> = {
