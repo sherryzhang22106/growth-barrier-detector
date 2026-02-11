@@ -210,7 +210,7 @@ async function getOpenId(code: string): Promise<string> {
   const url = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${WECHAT_APPID}&secret=${WECHAT_APP_SECRET}&code=${code}&grant_type=authorization_code`;
 
   const response = await fetch(url);
-  const data = await response.json();
+  const data = await response.json() as any;
 
   if (data.errcode) {
     throw new Error(`获取openid失败: ${data.errmsg}`);

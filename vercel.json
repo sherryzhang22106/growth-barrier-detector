@@ -4,12 +4,18 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "functions": {
-    "api/**/*.ts": {
-      "excludeFiles": "api/lib/**"
-    }
+    "api/ai.ts": {},
+    "api/codes.ts": {},
+    "api/payment.ts": {},
+    "api/progress.ts": {},
+    "api/assessments.ts": {},
+    "api/auth/admin-login.ts": {}
   },
   "rewrites": [
-    { "source": "/api/assessments/:id", "destination": "/api/assessments/[id]" },
+    { "source": "/api/assessments/submit", "destination": "/api/assessments?action=submit" },
+    { "source": "/api/assessments/list", "destination": "/api/assessments?action=list" },
+    { "source": "/api/assessments/export", "destination": "/api/assessments?action=export" },
+    { "source": "/api/assessments/:id", "destination": "/api/assessments?action=get&id=:id" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
