@@ -298,12 +298,12 @@ ${sanitizedAnswers.join('\n')}
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json() as any;
     console.error('DeepSeek API error:', errorData);
     throw new Error('AI API 调用失败');
   }
 
-  const data = await response.json();
+  const data = await response.json() as any;
   const content = data.choices?.[0]?.message?.content || '{}';
 
   let rawData: any = {};

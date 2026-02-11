@@ -133,7 +133,7 @@ async function handleNativePayment(req: VercelRequest, res: VercelResponse) {
       body,
     });
 
-    const data = await response.json();
+    const data = await response.json() as any;
 
     if (!response.ok) {
       console.error('微信支付API错误:', data);
@@ -260,7 +260,7 @@ async function handleJSAPIPayment(req: VercelRequest, res: VercelResponse) {
       body,
     });
 
-    const data = await response.json();
+    const data = await response.json() as any;
 
     if (!response.ok) {
       console.error('微信JSAPI支付API错误:', data);
@@ -339,7 +339,7 @@ async function handleQuery(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    const data = await response.json();
+    const data = await response.json() as any;
 
     if (data.trade_state === 'SUCCESS') {
       // 更新订单状态

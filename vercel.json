@@ -3,6 +3,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "functions": {
+    "api/**/*.ts": {
+      "excludeFiles": "api/lib/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/assessments/:id", "destination": "/api/assessments/[id]" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
