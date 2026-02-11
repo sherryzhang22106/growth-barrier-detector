@@ -4,12 +4,12 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "functions": {
-    "api/ai.ts": {},
-    "api/codes.ts": {},
-    "api/payment.ts": {},
-    "api/progress.ts": {},
-    "api/assessments.ts": {},
-    "api/auth/admin-login.ts": {}
+    "api/ai.ts": { "maxDuration": 60 },
+    "api/codes.ts": { "maxDuration": 10 },
+    "api/payment.ts": { "maxDuration": 30 },
+    "api/progress.ts": { "maxDuration": 10 },
+    "api/assessments.ts": { "maxDuration": 30 },
+    "api/auth/admin-login.ts": { "maxDuration": 10 }
   },
   "rewrites": [
     { "source": "/api/assessments/submit", "destination": "/api/assessments?action=submit" },
